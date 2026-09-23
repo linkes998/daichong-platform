@@ -1,0 +1,151 @@
+{
+  "source": {
+    "name": "玉米须AI服务（布肝）",
+    "site": "https://189990.xyz",
+    "platform": "Dujiao-Next（独角数卡 Next 版）",
+    "fetchedAt": "2026-09-21",
+    "fetchedVia": "公开接口 /api/v1/public/products（浏览器同源抓取）",
+    "raw": "data/source-import/189990-raw.json",
+    "note": "全站公开在售商品 3 款（会员充值 > GPT），其余分类（海外账号 / 海外通信 / 软件源码 / 代理与合作）公开货架为空。价格、参考价、库存、销量均为站点接口原值。"
+  },
+  "supplier": {
+    "id": "s9",
+    "name": "玉米须AI · GPT 卡密渠道",
+    "code": "BUGAN_GPT_CARD",
+    "mode": "api",
+    "apiUrl": "https://189990.xyz/api/v1/public",
+    "orderPath": "/orders",
+    "queryPath": "/orders",
+    "method": "POST",
+    "appId": "BUGAN-RESELLER",
+    "appSecret": "",
+    "signType": "md5",
+    "contentType": "json",
+    "timeout": 20,
+    "retry": 2,
+    "markup": 1,
+    "priority": 18,
+    "balance": 0,
+    "mockSuccessRate": 0.97,
+    "mockDelaySec": 4,
+    "notifyUrl": "",
+    "categories": ["c9"],
+    "status": "active",
+    "remark": "货源站 189990.xyz（玉米须AI服务 / 布肝，独角数卡 Next 版 Dujiao-Next）。公开接口只有 /public/config、/public/categories、/public/products，可实采商品与价格；下单与查单需登录态或供货授权，orderPath / queryPath 为常规命名占位，正式对接须联系站方开通后替换端点与密钥。当前全局沙箱开启，派单走本地模拟。"
+  },
+  "categories": [
+    {
+      "id": "c9",
+      "name": "AI 会员",
+      "icon": "🤖",
+      "desc": "GPT 等 AI 服务充值卡密，人工发放",
+      "sort": 9,
+      "status": "active",
+      "hue": "#10a37f"
+    }
+  ],
+  "products": [
+    {
+      "id": "p27",
+      "catId": "c9",
+      "name": "GPT Plus 正规充值月套餐",
+      "subtitle": "GPT 充值卡密 · 30 天订阅 · 原账号续期",
+      "icon": "🤖",
+      "hue": "#10a37f",
+      "tags": ["GPT", "代充", "人工交付"],
+      "badge": "热销",
+      "sort": 27,
+      "status": "active",
+      "sales": 29,
+      "accountType": "none",
+      "accountLabel": "免填（卡密发放）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为 GPT 充值卡密，下单并支付后发放卡密，无需填写账号。",
+      "needConfirm": false,
+      "deliveryMode": "manual",
+      "notice": "【商品类型】GPT 充值卡密（人工发放）。\n【服务内容】独立账号充值，原账号订阅 30 天；支持开票（税点自理）。\n【购买前请确认】需在充值中心核销卡密；同档或更高套餐可能无法重复充值。\n【交付与使用】1. 下单并完成支付；2. 用订单号在本站「订单查询」查看卡密；3. 打开充值中心 https://gpt.bugan.cn 输入卡密完成验证与充值，以充值中心最终状态为准。\n【说明】「卡密已交付」只代表发货完成，「充值成功」需在充值中心确认。\n【适合人群】适合个人学习、轻度使用与日常 GPT 辅助场景。",
+      "skus": [
+        {
+          "id": "p27-s1",
+          "name": "Plus 30天",
+          "faceValue": 138,
+          "price": 113,
+          "cost": 113,
+          "stock": 9967,
+          "supplierId": "s9",
+          "supplierSku": "gpt-codex-plus",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p28",
+      "catId": "c9",
+      "name": "GPT Pro 5x 正规代充 · 30天",
+      "subtitle": "高频使用 / 专业项目 · 人工发放卡密",
+      "icon": "🤖",
+      "hue": "#0f766e",
+      "tags": ["GPT", "代充", "人工交付"],
+      "badge": "热门",
+      "sort": 28,
+      "status": "active",
+      "sales": 7,
+      "accountType": "none",
+      "accountLabel": "免填（卡密发放）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为 GPT 充值卡密，下单并支付后发放卡密，无需填写账号。",
+      "needConfirm": false,
+      "deliveryMode": "manual",
+      "notice": "【商品类型】GPT 充值卡密（人工发放）。\n【服务内容】独立账号充值，原账号订阅 30 天；支持开票（税点自理）。\n【购买前请确认】需在充值中心核销卡密；同档或更高套餐可能无法重复充值。\n【交付与使用】1. 下单并完成支付；2. 用订单号在本站「订单查询」查看卡密；3. 打开充值中心 https://gpt.bugan.cn 输入卡密完成验证与充值，以充值中心最终状态为准。\n【说明】「卡密已交付」只代表发货完成，「充值成功」需在充值中心确认。\n【适合人群】适合高频使用、专业项目与中等强度需求，性价比推荐。",
+      "skus": [
+        {
+          "id": "p28-s1",
+          "name": "Pro 5x 30天",
+          "faceValue": 718,
+          "price": 650,
+          "cost": 650,
+          "stock": 9992,
+          "supplierId": "s9",
+          "supplierSku": "gpt-codex-pro-5x",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p29",
+      "catId": "c9",
+      "name": "GPT Pro 20x 正规代充 · 30天续费专用",
+      "subtitle": "高强度任务 / 团队协作 · 暂不支持新开",
+      "icon": "🤖",
+      "hue": "#7c3aed",
+      "tags": ["GPT", "代充", "仅续费"],
+      "badge": "",
+      "sort": 29,
+      "status": "active",
+      "sales": 0,
+      "accountType": "none",
+      "accountLabel": "免填（卡密发放）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为 GPT 充值卡密，下单并支付后发放卡密，无需填写账号。",
+      "needConfirm": false,
+      "deliveryMode": "manual",
+      "notice": "【重要】本套餐为续费专用，暂不支持新开账号，请确认你的账号已有 Pro 20x 权益再下单。\n【商品类型】GPT 充值卡密（人工发放）。\n【服务内容】独立账号充值，原账号订阅 30 天；支持开票（税点自理）。\n【购买前请确认】需在充值中心核销卡密；同档或更高套餐可能无法重复充值。\n【交付与使用】1. 下单并完成支付；2. 用订单号在本站「订单查询」查看卡密；3. 打开充值中心 https://gpt.bugan.cn 输入卡密完成验证与充值，以充值中心最终状态为准。\n【适合人群】适合高强度任务、多人协作与团队级使用场景。",
+      "skus": [
+        {
+          "id": "p29-s1",
+          "name": "Pro 20x 30天",
+          "faceValue": 1380,
+          "price": 1050,
+          "cost": 1050,
+          "stock": 9999,
+          "supplierId": "s9",
+          "supplierSku": "gpt-codex-pro-20x",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    }
+  ]
+}

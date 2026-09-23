@@ -1,0 +1,247 @@
+{
+  "source": {
+    "name": "CheJiu.VIP",
+    "site": "https://chejiu888.online",
+    "platform": "Next.js App Router（数据内联在首屏 flight 数据 initialProducts）",
+    "fetchedAt": "2026-09-21",
+    "fetchedVia": "首页 HTML 解析（tools/parse-next-flight.js）",
+    "raw": "shots/chejiu-products.json",
+    "note": "站点货架 8 个套餐：X Premium 3/6 个月、X Premium+ 3/6/12 个月、TG 会员 3/6/12 月；未公开库存与成本，库存按人工可接单量预设。"
+  },
+  "suppliers": [
+    {
+      "id": "s8",
+      "name": "CheJiu · X/TG 会员渠道",
+      "code": "CHEJIU_PREMIUM",
+      "mode": "api",
+      "apiUrl": "https://chejiu888.online",
+      "orderPath": "/api/orders/create",
+      "queryPath": "/api/orders/query",
+      "method": "POST",
+      "appId": "CHEJIU-AGENT",
+      "appSecret": "",
+      "signType": "md5",
+      "contentType": "json",
+      "timeout": 20,
+      "retry": 2,
+      "markup": 1,
+      "priority": 16,
+      "balance": 0,
+      "mockSuccessRate": 0.95,
+      "mockDelaySec": 5,
+      "notifyUrl": "",
+      "categories": ["c5"],
+      "status": "active",
+      "remark": "货源站 chejiu888.online（CheJiu.VIP，Next.js 零售站）。商品数据内联在首页首屏 flight 数据中，无公开供货 API；orderPath / queryPath 为常规命名占位，正式对接须联系站方开通后替换端点与密钥。当前全局沙箱开启，派单走本地模拟。"
+    }
+  ],
+  "categories": [],
+  "products": [
+    {
+      "id": "p15",
+      "catId": "c5",
+      "name": "X Premium（推特蓝V）",
+      "notice": "【开通方式】支付验证通过后由后端自动处理，通常 10 分钟内完成；超时请通过订单联系方式联系客服。\n【开通条件】账号当前不能已有蓝V；开通前 3 天内不要更换头像、昵称、ID 等资料，否则可能开通失败。\n【风险说明】官方低价区渠道，正规来源，掉落率很低；个别账号因风控等极端情况可能受影响。\n【查询】可用订单号或 X 用户名在「订单查询」页查看进度。\n【注意】虚拟服务一经开通不支持退款，请确认账号信息无误后再下单。",
+      "skus": [
+        {
+          "id": "p15-s1",
+          "name": "Premium 月付（1个月）",
+          "faceValue": 68,
+          "price": 45,
+          "cost": 31,
+          "stock": 200,
+          "supplierId": "s3",
+          "supplierSku": "X_PREMIUM_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p15-s2",
+          "name": "Premium 季付（3个月）",
+          "faceValue": 204,
+          "price": 128,
+          "cost": 88,
+          "stock": 120,
+          "supplierId": "s3",
+          "supplierSku": "X_PREMIUM_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p15-s3",
+          "name": "Premium 年付（1年）",
+          "faceValue": 816,
+          "price": 468,
+          "cost": 322,
+          "stock": 60,
+          "supplierId": "s3",
+          "supplierSku": "X_PREMIUM_12M",
+          "status": "active",
+          "sort": 3
+        },
+        {
+          "id": "p15-s4",
+          "name": "3个月 X Premium（CheJiu 渠道）",
+          "faceValue": 30,
+          "price": 30,
+          "cost": 30,
+          "stock": 100,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788723153642",
+          "status": "active",
+          "sort": 4
+        },
+        {
+          "id": "p15-s5",
+          "name": "6个月 X Premium（CheJiu 渠道 · 最受欢迎）",
+          "faceValue": 50,
+          "price": 50,
+          "cost": 50,
+          "stock": 80,
+          "supplierId": "s8",
+          "supplierSku": "premium-6",
+          "status": "active",
+          "sort": 5
+        }
+      ]
+    },
+    {
+      "id": "p16",
+      "catId": "c5",
+      "name": "Telegram Premium",
+      "notice": "【开通方式】TG 会员目前无自动赠送，需人工开单，请耐心等待（工作时间 13:00–01:00 UTC+8），勿催。\n【账号要求】请填写 @用户名；若设置了隐藏用户名，可填写绑定手机号。\n【查询】可用订单号或 TG 账号在「订单查询」页查看进度。\n【注意】虚拟服务一经开通不支持退款，请确认账号信息无误后再下单。",
+      "skus": [
+        {
+          "id": "p16-s1",
+          "name": "Premium 1个月",
+          "faceValue": 45,
+          "price": 32,
+          "cost": 21,
+          "stock": 300,
+          "supplierId": "s3",
+          "supplierSku": "TG_PREMIUM_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p16-s2",
+          "name": "Premium 3个月",
+          "faceValue": 135,
+          "price": 88,
+          "cost": 60,
+          "stock": 180,
+          "supplierId": "s3",
+          "supplierSku": "TG_PREMIUM_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p16-s3",
+          "name": "Premium 12个月",
+          "faceValue": 540,
+          "price": 328,
+          "cost": 226,
+          "stock": 80,
+          "supplierId": "s3",
+          "supplierSku": "TG_PREMIUM_12M",
+          "status": "active",
+          "sort": 3
+        },
+        {
+          "id": "p16-s4",
+          "name": "TG会员 3个月（CheJiu 渠道）",
+          "faceValue": 93,
+          "price": 93,
+          "cost": 93,
+          "stock": 50,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788699685487",
+          "status": "active",
+          "sort": 4
+        },
+        {
+          "id": "p16-s5",
+          "name": "TG会员 6个月（CheJiu 渠道）",
+          "faceValue": 126,
+          "price": 126,
+          "cost": 126,
+          "stock": 30,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788722774790",
+          "status": "active",
+          "sort": 5
+        },
+        {
+          "id": "p16-s6",
+          "name": "TG会员 12个月（CheJiu 渠道）",
+          "faceValue": 213,
+          "price": 213,
+          "cost": 213,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788722790880",
+          "status": "active",
+          "sort": 6
+        }
+      ]
+    },
+    {
+      "id": "p30",
+      "catId": "c5",
+      "name": "X Premium+ 会员",
+      "subtitle": "X 平台最高档会员 · 人工开单 · 手动处理勿催",
+      "icon": "𝕏",
+      "hue": "#1d4ed8",
+      "tags": ["官方渠道", "人工开单", "高价值"],
+      "badge": "旗舰",
+      "sort": 4,
+      "status": "active",
+      "sales": 0,
+      "accountType": "username",
+      "accountLabel": "X 账号（@用户名）",
+      "accountPlaceholder": "请输入 @username",
+      "accountHint": "只需填写 @用户名，无需提供密码。开通前 3 天请勿修改头像/昵称/ID，否则可能开通失败。",
+      "needConfirm": true,
+      "deliveryMode": "manual",
+      "notice": "【开通方式】人工开单，支付后由人工处理，请耐心等待（工作时间 13:00–01:00 UTC+8），勿催。\n【开通条件】账号当前不能已有蓝V；开通前 3 天内不要更换头像、昵称、ID 等资料，否则可能开通失败。\n【风险说明】官方低价区渠道，正规来源，掉落率很低；个别账号因风控等极端情况可能受影响。\n【查询】可用订单号或 X 用户名在「订单查询」页查看进度。\n【注意】虚拟服务一经开通不支持退款，请确认账号信息无误后再下单。",
+      "skus": [
+        {
+          "id": "p30-s1",
+          "name": "Premium+ 3个月",
+          "faceValue": 666,
+          "price": 666,
+          "cost": 666,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1789463452209",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p30-s2",
+          "name": "Premium+ 6个月",
+          "faceValue": 999,
+          "price": 999,
+          "cost": 999,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1789463454465",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p30-s3",
+          "name": "Premium+ 12个月",
+          "faceValue": 1132.2,
+          "price": 1132.2,
+          "cost": 1132.2,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1789468787717",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    }
+  ]
+}

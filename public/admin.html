@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>后台管理 · 云充站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+<link rel="stylesheet" href="/assets/theme.css">
+<link rel="stylesheet" href="/assets/store.css">
+<link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body class="admin">
+
+<!-- ================= 登录 ================= -->
+<div class="login-wrap" id="loginView">
+  <div class="login-card">
+    <div class="brand"><span class="brand-mark" style="width:40px;height:40px;font-size:19px;border-radius:12px">⚡</span>
+      <span style="font-size:18px">云充站<small>运营后台</small></span></div>
+    <h2>登录管理后台</h2>
+    <p class="muted" style="font-size:13px;margin-bottom:24px">管理商品、套餐、商品来源（API 通道）与订单</p>
+    <div class="field">
+      <label>管理员账号</label>
+      <input class="input" id="lgUser" value="admin" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>密码</label>
+      <input class="input" id="lgPass" type="password" placeholder="请输入密码" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary btn-block btn-lg" id="lgBtn">登录</button>
+    <div class="hint" style="text-align:center;margin-top:16px">演示账号：<b class="mono">admin / admin888</b></div>
+    <div style="text-align:center;margin-top:18px"><a href="/" class="muted" style="font-size:12.5px">← 返回前台商城</a></div>
+  </div>
+</div>
+
+<!-- ================= 主体 ================= -->
+<div class="layout hide" id="appView">
+  <aside class="side">
+    <div class="brand"><span class="brand-mark">⚡</span><span style="font-size:15px">云充站<small>运营后台</small></span></div>
+    <nav id="sideNav">
+      <div class="grp">经营</div>
+      <a data-page="overview"><span class="ic">📊</span><span>数据概览</span></a>
+      <a data-page="orders"><span class="ic">🧾</span><span>订单管理</span><span class="cnt" id="navOrderCnt"></span></a>
+      <div class="grp">商品</div>
+      <a data-page="products"><span class="ic">📦</span><span>商品与套餐</span></a>
+      <a data-page="suppliers"><span class="ic">🔌</span><span>商品来源 / API</span></a>
+      <a data-page="categories"><span class="ic">🗂️</span><span>分类管理</span></a>
+      <div class="grp">系统</div>
+      <a data-page="pay"><span class="ic">💳</span><span>支付配置</span></a>
+      <a data-page="settings"><span class="ic">⚙️</span><span>系统设置</span></a>
+      <a data-page="logs"><span class="ic">📜</span><span>操作日志</span></a>
+    </nav>
+    <div class="side-foot">
+      <a class="btn btn-sm btn-ghost btn-block" href="/" target="_blank">🛍️ 查看前台商城</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="main-head">
+      <div>
+        <h1 id="pageTitle">数据概览</h1>
+        <div class="sub" id="pageSub">经营数据一览</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+        <span class="chip" id="sandboxChip"></span>
+        <span class="chip" id="adminChip"></span>
+        <button class="btn btn-sm btn-ghost" id="logoutBtn">退出</button>
+      </div>
+    </header>
+    <div class="main-body" id="pageBody"></div>
+  </main>
+</div>
+
+<div id="modalRoot"></div>
+<div id="drawerRoot"></div>
+<div id="toast-wrap"></div>
+
+<script src="/assets/app.js"></script>
+<script src="/assets/admin.js"></script>
+</body>
+</html>

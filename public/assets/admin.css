@@ -1,0 +1,152 @@
+/* ============================================================
+   后台管理样式
+   ============================================================ */
+body.admin { background: var(--bg); }
+
+.layout { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+/* ---------------- 侧栏 ---------------- */
+.side {
+  width: 226px; flex: none; background: rgba(11, 13, 21, 0.92);
+  border-right: 1px solid var(--line); padding: 18px 12px; position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; backdrop-filter: blur(14px);
+}
+.side .brand { padding: 6px 10px 20px; }
+.side nav { display: flex; flex-direction: column; gap: 3px; }
+.side nav .grp { font-size: 11px; color: var(--text-3); padding: 16px 12px 7px; letter-spacing: 0.6px; }
+.side nav a {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
+  color: var(--text-2); font-size: 13.5px; cursor: pointer; transition: 0.16s;
+}
+.side nav a:hover { background: var(--surface-2); color: #fff; }
+.side nav a.on { background: linear-gradient(135deg, rgba(109, 94, 252, 0.24), rgba(34, 211, 238, 0.12)); color: #fff; font-weight: 600; box-shadow: inset 0 0 0 1px rgba(109, 94, 252, 0.35); }
+.side nav a .ic { font-size: 15px; width: 18px; text-align: center; }
+.side nav a .cnt { margin-left: auto; font-size: 11px; background: var(--surface-3); padding: 1px 7px; border-radius: 999px; color: var(--text-2); }
+.side-foot { margin-top: auto; padding: 12px 10px 4px; border-top: 1px solid var(--line); }
+
+/* ---------------- 主区 ---------------- */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.main-head {
+  height: 64px; display: flex; align-items: center; gap: 16px; padding: 0 26px;
+  border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 30;
+  background: rgba(6, 7, 13, 0.86); backdrop-filter: blur(16px);
+}
+.main-head h1 { font-size: 17px; font-weight: 650; }
+.main-head .sub { font-size: 12.5px; color: var(--text-3); }
+.main-body { padding: 24px 26px 60px; }
+
+/* ---------------- 统计卡 ---------------- */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(164px, 1fr)); gap: 14px; }
+.stat {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 15px; padding: 18px 20px;
+  position: relative; overflow: hidden;
+}
+.stat .lb { font-size: 12.5px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+.stat .vl { font-size: 27px; font-weight: 750; letter-spacing: -0.9px; margin: 9px 0 4px; }
+.stat .ft { font-size: 12px; color: var(--text-3); }
+.stat .ft b { color: var(--ok); }
+.stat .glow { position: absolute; right: -30px; top: -34px; width: 110px; height: 110px; border-radius: 50%; filter: blur(38px); opacity: 0.22; }
+
+/* ---------------- 图表 ---------------- */
+.chart-row { display: grid; grid-template-columns: 1.55fr 1fr; gap: 16px; margin-top: 16px; }
+.chart-card { background: var(--surface); border: 1px solid var(--line); border-radius: 15px; padding: 20px; }
+.chart-card h3 { font-size: 14.5px; font-weight: 620; margin-bottom: 4px; }
+.chart-card .sub { font-size: 12px; color: var(--text-3); margin-bottom: 18px; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-3); margin-top: 10px; flex-wrap: wrap; }
+.legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 6px; }
+
+.bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 13px; font-size: 13px; }
+.bar-row .nm { width: 88px; flex: none; color: var(--text-2); }
+.bar-row .track { display: block; flex: 1; height: 8px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.bar-row .fill { display: block; height: 100%; border-radius: 999px; transition: width 0.5s; }
+.bar-row .vv { width: 78px; text-align: right; flex: none; color: var(--text-3); font-size: 12.5px; }
+
+/* ---------------- 工具栏 ---------------- */
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.toolbar .input, .toolbar .select { height: 38px; padding: 0 13px; width: auto; min-width: 170px; }
+.toolbar .spacer { flex: 1; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+.tabs .t {
+  padding: 7px 14px; border-radius: 9px; font-size: 13px; color: var(--text-2);
+  border: 1px solid var(--line-2); cursor: pointer; background: var(--surface); transition: 0.16s;
+}
+.tabs .t:hover { color: #fff; }
+.tabs .t.on { background: var(--brand); border-color: transparent; color: #fff; font-weight: 600; }
+.tabs .t .n { font-size: 11px; opacity: 0.75; margin-left: 4px; }
+
+/* ---------------- 面板 ---------------- */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 15px; overflow: hidden; }
+.panel-head { padding: 15px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+.panel-head h3 { font-size: 14.5px; font-weight: 620; }
+.panel-body { padding: 20px; }
+
+/* ---------------- 商品/来源卡 ---------------- */
+.sup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+.sup-card { background: var(--surface); border: 1px solid var(--line); border-radius: 15px; padding: 18px; transition: 0.18s; }
+.sup-card:hover { border-color: var(--line-2); }
+.sup-card .hd { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 14px; }
+.sup-card .hd .ico { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; background: var(--surface-3); flex: none; }
+.sup-card .hd h4 { font-size: 14.5px; font-weight: 620; line-height: 1.35; }
+.sup-card .hd .mono { font-size: 11.5px; color: var(--text-3); }
+.sup-card .kv { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; color: var(--text-2); }
+.sup-card .kv span:last-child { color: var(--text); font-weight: 500; }
+.sup-card .acts { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+
+/* ---------------- 抽屉 ---------------- */
+.drawer-mask { position: fixed; inset: 0; background: rgba(3, 4, 9, 0.7); z-index: 300; animation: fadeIn 0.2s; }
+.drawer {
+  position: fixed; right: 0; top: 0; bottom: 0; width: 560px; max-width: 94vw; background: var(--surface);
+  border-left: 1px solid var(--line-2); z-index: 301; display: flex; flex-direction: column;
+  animation: slideLeft 0.26s cubic-bezier(0.2, 0.9, 0.3, 1);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.5);
+}
+@keyframes slideLeft { from { transform: translateX(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+.drawer-head { padding: 18px 22px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 22px; }
+.drawer-foot { padding: 14px 22px; border-top: 1px solid var(--line); display: flex; gap: 9px; background: var(--bg-2); flex-wrap: wrap; }
+
+/* ---------------- 内联编辑表格 ---------------- */
+.sku-editor { width: 100%; border-collapse: separate; border-spacing: 0 7px; font-size: 13px; }
+.sku-editor th { font-size: 12px; color: var(--text-3); font-weight: 500; text-align: left; padding: 0 8px 4px; white-space: nowrap; }
+.sku-editor td { padding: 0 5px; }
+.sku-editor .input, .sku-editor .select { height: 34px; padding: 0 9px; font-size: 12.5px; }
+.sku-editor .del { width: 30px; height: 34px; border-radius: 8px; border: 1px solid var(--line-2); background: transparent; color: #ff8598; cursor: pointer; }
+
+/* ---------------- 开关 ---------------- */
+.switch { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; font-size: 13.5px; user-select: none; }
+.switch .track { width: 40px; height: 22px; border-radius: 999px; background: var(--surface-3); border: 1px solid var(--line-2); position: relative; transition: 0.2s; flex: none; }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--text-3); transition: 0.2s; }
+.switch.on .track { background: rgba(109, 94, 252, 0.35); border-color: var(--brand); }
+.switch.on .track::after { left: 20px; background: #fff; }
+
+/* ---------------- 表单栅格 ---------------- */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-sec { margin: 24px 0 14px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; font-weight: 650; color: var(--text-2); }
+.form-sec:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+/* ---------------- 登录 ---------------- */
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; position: relative; z-index: 1; }
+.login-card { width: 100%; max-width: 400px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 20px; padding: 34px 30px; box-shadow: var(--shadow); }
+.login-card h2 { font-size: 21px; font-weight: 700; margin: 16px 0 6px; }
+
+/* ---------------- 杂项 ---------------- */
+.code-box { background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: #9fe6f5; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; max-height: 260px; overflow: auto; }
+.mini-table { width: 100%; font-size: 12.5px; border-collapse: collapse; }
+.mini-table td { padding: 7px 0; border-bottom: 1px solid var(--line); }
+.mini-table td:last-child { text-align: right; color: var(--text-2); }
+.row-flex { display: flex; align-items: center; gap: 10px; }
+.badge-mode { font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+.mode-api { background: rgba(34, 211, 238, 0.14); color: #7ee7f7; }
+.mode-mock { background: rgba(109, 94, 252, 0.16); color: #b3a9ff; }
+.mode-manual { background: rgba(245, 158, 11, 0.14); color: #fbc65e; }
+
+@media (max-width: 1100px) {
+  .chart-row { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+  .side { width: 66px; padding: 14px 8px; }
+  .side nav a span:not(.ic):not(.cnt) { display: none; }
+  .side .brand span:not(.brand-mark) { display: none; }
+  .side nav .grp { display: none; }
+  .side nav a { justify-content: center; }
+}

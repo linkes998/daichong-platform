@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>收银台 · 云充站</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+<link rel="stylesheet" href="/assets/theme.css">
+<link rel="stylesheet" href="/assets/store.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="container topbar-inner">
+    <a class="brand" href="/"><span class="brand-mark">⚡</span><span>云充站<small>收银台</small></span></a>
+    <div class="topbar-right"><a class="btn btn-sm btn-ghost" href="/query.html">订单查询</a></div>
+  </div>
+</header>
+
+<section class="sec" style="padding-top:44px">
+  <div class="container" style="max-width:720px">
+    <div class="card" id="host">
+      <div class="skeleton" style="height:320px"></div>
+    </div>
+  </div>
+</section>
+
+<div id="toast-wrap"></div>
+<script src="/assets/app.js"></script>
+<script>
+let ORDER = null, timer = null;
+
+async function boot() {
+  const no = qs('no');
+  const host = document.getElementById('host');
+  if (!no) { host.innerHTML = '<div class="empty"><div class="big">🧾</div>缺少订单号参数<div style="margin-top:14px"><a class="btn btn-sm" href="/query.html">去查询订单</a></div></div>'; return; }
+  const res = await api('/api/orders/' + no);
+  if (!res.ok) { host.innerHTML = '<div class="empty"><div class="big">🔍</div>' + escapeHtml(res.message || '订单不存在') + '</div>'; return; }
+  ORDER = res.order;
+  render();
+  poll();
+}
+
+function render() {
+  const host = document.getElementById('host');
+  const o = ORDER;
+  const st = STATUS_MAP[o.status] || {};
+  if (o.status !== 'pending_payment') return renderStatus();
+  host.innerHTML = `<div class="modal-body" style="padding:30px 24px">
+    <div class="cashier">
+      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:4px">
+        <span class="chip chip-brand">${escapeHtml(o.payMethodName)}</span>
+        <span class="chip chip-warn">待支付</span>
+      </div>
+      <div class="qr">${qrSvg(o.no, 200)}</div>
+      <div class="amt"><small>¥</small>${money(o.amount)}</div>
+      <div class="oid">订单号 <b>${o.no}</b>
+        <button class="btn btn-xs btn-ghost" style="margin-left:6px" onclick="copyText('${o.no}','订单号已复制')">复制</button></div>
+      <div class="countdown">⏳ 剩余支付时间 <b id="cd">--:--</b></div>
+      <div style="max-width:440px;margin:24px auto 0;text-align:left">
+        <div class="info-rows">
+          <div class="r"><span class="k">充值商品</span><span class="v">${escapeHtml(o.productName)} · ${escapeHtml(o.skuName)}</span></div>
+          <div class="r"><span class="k">充值账号</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>
+          <div class="r"><span class="k">下单时间</span><span class="v">${fmtTime(o.createdAt)}</span></div>
+        </div>
+        <div class="card card-tight" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.28);margin:16px 0">
+          <div style="font-size:12.5px;color:#fbc65e;line-height:1.7">沙箱演示收银台：二维码不可真实支付。点击下方按钮模拟支付成功，系统立即触发自动充值。</div>
+        </div>
+        <button class="btn btn-primary btn-block btn-lg" id="mockPay">✅ 模拟支付成功（演示）</button>
+      </div>
+    </div></div>`;
+  document.getElementById('mockPay').addEventListener('click', doPay);
+  countdown();
+}
+
+function countdown() {
+  clearInterval(timer);
+  const tick = () => {
+    const el = document.getElementById('cd');
+    if (!el) return clearInterval(timer);
+    const left = new Date(ORDER.expireAt).getTime() - Date.now();
+    if (left <= 0) { el.textContent = '已过期'; return; }
+    el.textContent = Math.floor(left / 60000) + ':' + String(Math.floor((left % 60000) / 1000)).padStart(2, '0');
+  };
+  tick();
+  timer = setInterval(tick, 1000);
+}
+
+async function doPay() {
+  const b = document.getElementById('mockPay');
+  b.disabled = true; b.innerHTML = '<span class="spin"></span> 确认支付中';
+  const res = await api('/api/orders/' + ORDER.no + '/pay', { method: 'POST' });
+  if (!res.ok) { toast(res.message || '支付失败', 'err'); b.disabled = false; b.textContent = '重试'; return; }
+  ORDER = res.order;
+  renderStatus();
+}
+
+function renderStatus() {
+  clearInterval(timer);
+  const o = ORDER;
+  const host = document.getElementById('host');
+  const iconMap = { success: '✅', failed: '⚠️', recharging: '🔄', paid: '💳', refunded: '↩️' };
+  const titleMap = { success: '充值成功，已到账', failed: '充值失败', recharging: '上游处理中，请稍候', paid: '已支付，正在派单', refunded: '已退款' };
+  const logs = (o.logs || []).slice().reverse().map((l) => {
+    const cls = l.level === 'success' ? 'ok' : l.level === 'error' ? 'err' : l.level === 'warn' ? 'warn' : '';
+    return `<div class="tl-item ${cls}"><div class="m">${escapeHtml(l.msg)}</div><div class="t">${fmtTime(l.t)}</div></div>`;
+  }).join('');
+  host.innerHTML = `<div class="modal-body" style="padding:26px">
+    <div class="result-head">
+      <div class="big">${iconMap[o.status] || '📦'}</div>
+      <h3>${titleMap[o.status] || o.statusText}</h3>
+      <p>订单号 ${o.no}</p>
+      ${o.status === 'recharging' ? '<div style="margin-top:12px"><span class="spin"></span> <span style="font-size:12.5px;color:var(--text-3);margin-left:6px">正在向商品来源下发充值指令…</span></div>' : ''}
+    </div>
+    <div class="info-rows">
+      <div class="r"><span class="k">商品</span><span class="v">${escapeHtml(o.productName)} · ${escapeHtml(o.skuName)}</span></div>
+      <div class="r"><span class="k">充值账号</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>
+      <div class="r"><span class="k">实付</span><span class="v">¥${money(o.amount)}</span></div>
+      <div class="r"><span class="k">商品来源</span><span class="v">${escapeHtml(o.supplierName || '—')}${o.supplierOrderNo ? ' · ' + escapeHtml(o.supplierOrderNo) : ''}</span></div>
+    </div>
+    <div class="sec-title" style="margin-top:0"><span class="n">✓</span>处理进度</div>
+    <div class="timeline">${logs}</div>
+    <div style="display:flex;gap:10px;margin-top:22px">
+      <a class="btn btn-block" href="/">返回首页</a>
+      <a class="btn btn-primary btn-block" href="/query.html?kw=${o.no}">订单查询</a>
+    </div>
+  </div>`;
+}
+
+function poll() {
+  setInterval(async () => {
+    if (!ORDER) return;
+    const res = await api('/api/orders/' + ORDER.no);
+    if (!res.ok) return;
+    const changed = res.order.status !== ORDER.status;
+    ORDER = res.order;
+    if (changed) renderStatus();
+    if (['success', 'failed', 'refunded'].includes(ORDER.status)) return;
+  }, 2600);
+}
+
+boot();
+</script>
+</body>
+</html>

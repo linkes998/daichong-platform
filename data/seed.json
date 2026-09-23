@@ -1,0 +1,1944 @@
+{
+  "settings": {
+    "siteName": "云充站",
+    "siteSubtitle": "会员代充 · 极速到账",
+    "slogan": "一站式会员套餐代充 简单、透明、快速",
+    "notice": "新用户首单立减 3 元｜下单请务必核对充值账号，提交后不可修改｜工作时间 09:00-23:00｜邮箱账号类商品仅支持接收邮件，请合规使用，违规订单不予售后",
+    "icp": "",
+    "service": {
+      "tg": "@yunchong_service",
+      "wechat": "yunchong_kf",
+      "qq": "800820820",
+      "workTime": "09:00 - 23:00"
+    },
+    "orderExpireMinutes": 30,
+    "autoRecharge": true,
+    "sandboxMode": true,
+    "minAmountAlert": 1000,
+    "queryNeedAccount": false
+  },
+  "payMethods": [
+    {
+      "code": "alipay",
+      "name": "支付宝",
+      "icon": "🅰️",
+      "enabled": true,
+      "sort": 1,
+      "fee": 0
+    },
+    {
+      "code": "wechat",
+      "name": "微信支付",
+      "icon": "💚",
+      "enabled": true,
+      "sort": 2,
+      "fee": 0
+    },
+    {
+      "code": "qqpay",
+      "name": "QQ钱包",
+      "icon": "🐧",
+      "enabled": true,
+      "sort": 3,
+      "fee": 0
+    },
+    {
+      "code": "usdt",
+      "name": "USDT (TRC20)",
+      "icon": "🪙",
+      "enabled": true,
+      "sort": 4,
+      "fee": 0
+    },
+    {
+      "code": "card",
+      "name": "卡密支付",
+      "icon": "🎫",
+      "enabled": false,
+      "sort": 5,
+      "fee": 0
+    }
+  ],
+  "payConfig": {
+    "gateway": "epay",
+    "apiUrl": "https://pay.example-gateway.com/mapi.php",
+    "merchantId": "10086",
+    "merchantKey": "",
+    "notifyUrl": "http://localhost:8899/api/callback/pay",
+    "sandboxMode": true,
+    "autoRefundOnFail": false,
+    "failRefundRate": 100
+  },
+  "categories": [
+    {
+      "id": "c1",
+      "name": "视频会员",
+      "icon": "🎬",
+      "desc": "主流视频平台会员直充",
+      "sort": 1,
+      "status": "active",
+      "hue": "#6d5efc"
+    },
+    {
+      "id": "c2",
+      "name": "音乐音频",
+      "icon": "🎧",
+      "desc": "音乐平台豪华会员",
+      "sort": 2,
+      "status": "active",
+      "hue": "#22d3ee"
+    },
+    {
+      "id": "c3",
+      "name": "网盘工具",
+      "icon": "☁️",
+      "desc": "网盘 / 办公软件会员",
+      "sort": 3,
+      "status": "active",
+      "hue": "#38bdf8"
+    },
+    {
+      "id": "c4",
+      "name": "游戏充值",
+      "icon": "🎮",
+      "desc": "游戏点券与礼包",
+      "sort": 4,
+      "status": "active",
+      "hue": "#f59e0b"
+    },
+    {
+      "id": "c5",
+      "name": "海外专区",
+      "icon": "🌐",
+      "desc": "X / Telegram / YouTube Premium",
+      "sort": 5,
+      "status": "active",
+      "hue": "#f5c451"
+    },
+    {
+      "id": "c6",
+      "name": "iCloud 邮箱",
+      "icon": "📧",
+      "desc": "接收所有内容，长期使用；长效 / 短效可选",
+      "sort": 6,
+      "status": "active",
+      "hue": "#8b5cf6"
+    },
+    {
+      "id": "c7",
+      "name": "平台专用验证邮箱",
+      "icon": "🔐",
+      "desc": "PayPal / Cash App / TikTok / Shopify / Claude 等平台专用",
+      "sort": 7,
+      "status": "active",
+      "hue": "#0ea5e9"
+    },
+    {
+      "id": "c8",
+      "name": "Hotmail 令牌邮箱",
+      "icon": "📨",
+      "desc": "已绑辅邮，已授权 OAuth2 / IMAP / GRAPH",
+      "sort": 8,
+      "status": "active",
+      "hue": "#eab308"
+    },
+    {
+      "id": "c9",
+      "name": "AI 会员",
+      "icon": "🤖",
+      "desc": "GPT 等 AI 服务充值卡密，人工发放",
+      "sort": 9,
+      "status": "active",
+      "hue": "#10a37f"
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "s1",
+      "name": "云充科技·视频会员通道",
+      "code": "YUNCHONG_VIDEO",
+      "mode": "api",
+      "apiUrl": "https://api.yunchong-vip.com/openapi/v1",
+      "orderPath": "/createOrder",
+      "queryPath": "/queryOrder",
+      "method": "POST",
+      "appId": "CY10086",
+      "appSecret": "sk_live_9f2c7a41e8b3",
+      "signType": "md5",
+      "contentType": "form",
+      "timeout": 15,
+      "retry": 2,
+      "markup": 1.28,
+      "priority": 10,
+      "balance": 28650.5,
+      "mockSuccessRate": 0.97,
+      "mockDelaySec": 4,
+      "notifyUrl": "",
+      "categories": [
+        "c1",
+        "c2"
+      ],
+      "status": "active",
+      "remark": "主通道，覆盖爱奇艺/腾讯/优酷/芒果等主流视频会员，成本稳定。"
+    },
+    {
+      "id": "s2",
+      "name": "极速代充·综合通道",
+      "code": "JISU_MIX",
+      "mode": "api",
+      "apiUrl": "https://open.jisu-recharge.cn/api",
+      "orderPath": "/recharge",
+      "queryPath": "/order/status",
+      "method": "POST",
+      "appId": "JS88213",
+      "appSecret": "js_sec_41ac87d0",
+      "signType": "md5",
+      "contentType": "json",
+      "timeout": 20,
+      "retry": 3,
+      "markup": 1.22,
+      "priority": 8,
+      "balance": 9640,
+      "mockSuccessRate": 0.94,
+      "mockDelaySec": 6,
+      "notifyUrl": "",
+      "categories": [
+        "c2",
+        "c3"
+      ],
+      "status": "active",
+      "remark": "音乐/网盘工具类，价格较低，高峰期偶发超时。"
+    },
+    {
+      "id": "s3",
+      "name": "海外专线·Premium Hub",
+      "code": "OVERSEA_PREMIUM",
+      "mode": "api",
+      "apiUrl": "https://gw.premiumhub-asia.com/v2",
+      "orderPath": "/submit",
+      "queryPath": "/status",
+      "method": "POST",
+      "appId": "PH-2026",
+      "appSecret": "ph_key_7d31b6e9",
+      "signType": "hmac-sha256",
+      "contentType": "json",
+      "timeout": 30,
+      "retry": 2,
+      "markup": 1.45,
+      "priority": 6,
+      "balance": 3120.8,
+      "mockSuccessRate": 0.9,
+      "mockDelaySec": 9,
+      "notifyUrl": "",
+      "categories": [
+        "c5"
+      ],
+      "status": "active",
+      "remark": "X / Telegram / YouTube Premium，人工+BOT 混合处理，到账较慢。"
+    },
+    {
+      "id": "s4",
+      "name": "星卡游戏·点券通道",
+      "code": "XINGKA_GAME",
+      "mode": "api",
+      "apiUrl": "https://api.xingka-game.com/open",
+      "orderPath": "/order/create",
+      "queryPath": "/order/query",
+      "method": "POST",
+      "appId": "XK5566",
+      "appSecret": "xk_secret_33fa21",
+      "signType": "md5",
+      "contentType": "form",
+      "timeout": 15,
+      "retry": 2,
+      "markup": 1.18,
+      "priority": 7,
+      "balance": 15200,
+      "mockSuccessRate": 0.96,
+      "mockDelaySec": 5,
+      "notifyUrl": "",
+      "categories": [
+        "c4"
+      ],
+      "status": "active",
+      "remark": "游戏点券类，需校验角色大区，失败多为账号格式错误。"
+    },
+    {
+      "id": "s5",
+      "name": "人工代充工位",
+      "code": "MANUAL_DESK",
+      "mode": "manual",
+      "apiUrl": "",
+      "orderPath": "",
+      "queryPath": "",
+      "method": "POST",
+      "appId": "",
+      "appSecret": "",
+      "signType": "none",
+      "contentType": "form",
+      "timeout": 0,
+      "retry": 0,
+      "markup": 1.1,
+      "priority": 1,
+      "balance": 0,
+      "mockSuccessRate": 1,
+      "mockDelaySec": 0,
+      "notifyUrl": "",
+      "categories": [
+        "c1",
+        "c5"
+      ],
+      "status": "active",
+      "remark": "无 API 的稀缺品，订单进入人工工位，需后台手动完成。"
+    },
+    {
+      "id": "s6",
+      "name": "老网关（已停用）",
+      "code": "LEGACY_GW",
+      "mode": "api",
+      "apiUrl": "https://old.gateway-2023.com/api",
+      "orderPath": "/order",
+      "queryPath": "/query",
+      "method": "POST",
+      "appId": "OLD0001",
+      "appSecret": "old_secret",
+      "signType": "md5",
+      "contentType": "form",
+      "timeout": 10,
+      "retry": 0,
+      "markup": 1.3,
+      "priority": 0,
+      "balance": 0,
+      "mockSuccessRate": 0.6,
+      "mockDelaySec": 12,
+      "notifyUrl": "",
+      "categories": [],
+      "status": "disabled",
+      "remark": "2023 年遗留网关，商户已欠费，仅作历史数据保留。"
+    },
+    {
+      "id": "s7",
+      "name": "iCloud 邮箱货源 · icloud011",
+      "code": "ICLOUD011_MAIL",
+      "mode": "api",
+      "apiUrl": "https://icloud0411.com/api",
+      "orderPath": "/createOrder",
+      "queryPath": "/queryOrder",
+      "method": "POST",
+      "appId": "IC011-AGENT",
+      "appSecret": "",
+      "signType": "md5",
+      "contentType": "form",
+      "timeout": 20,
+      "retry": 2,
+      "markup": 1,
+      "priority": 15,
+      "balance": 0,
+      "mockSuccessRate": 0.96,
+      "mockDelaySec": 3,
+      "notifyUrl": "",
+      "categories": [
+        "c6",
+        "c7",
+        "c8"
+      ],
+      "status": "active",
+      "remark": "货源站 icloud011.com 为自动发货型，公告只公开取件/接口前缀 https://icloud0411.com/api?a= 。正式供货接口（下单/查单/回调）需联系其客服 nike05067 开通后，替换本通道的 apiUrl / orderPath / appId / appSecret。当前全局沙箱开启，派单走本地模拟。"
+    },
+    {
+      "id": "s9",
+      "name": "玉米须AI · GPT 卡密渠道",
+      "code": "BUGAN_GPT_CARD",
+      "mode": "api",
+      "apiUrl": "https://189990.xyz/api/v1/public",
+      "orderPath": "/orders",
+      "queryPath": "/orders",
+      "method": "POST",
+      "appId": "BUGAN-RESELLER",
+      "appSecret": "",
+      "signType": "md5",
+      "contentType": "json",
+      "timeout": 20,
+      "retry": 2,
+      "markup": 1,
+      "priority": 18,
+      "balance": 0,
+      "mockSuccessRate": 0.97,
+      "mockDelaySec": 4,
+      "notifyUrl": "",
+      "categories": [
+        "c9"
+      ],
+      "status": "active",
+      "remark": "货源站 189990.xyz（玉米须AI服务 / 布肝，独角数卡 Next 版 Dujiao-Next）。公开接口只有 /public/config、/public/categories、/public/products，可实采商品与价格；下单与查单需登录态或供货授权，orderPath / queryPath 为常规命名占位，正式对接须联系站方开通后替换端点与密钥。当前全局沙箱开启，派单走本地模拟。"
+    },
+    {
+      "id": "s8",
+      "name": "CheJiu · X/TG 会员渠道",
+      "code": "CHEJIU_PREMIUM",
+      "mode": "api",
+      "apiUrl": "https://chejiu888.online",
+      "orderPath": "/api/orders/create",
+      "queryPath": "/api/orders/query",
+      "method": "POST",
+      "appId": "CHEJIU-AGENT",
+      "appSecret": "",
+      "signType": "md5",
+      "contentType": "json",
+      "timeout": 20,
+      "retry": 2,
+      "markup": 1,
+      "priority": 16,
+      "balance": 0,
+      "mockSuccessRate": 0.95,
+      "mockDelaySec": 5,
+      "notifyUrl": "",
+      "categories": [
+        "c5"
+      ],
+      "status": "active",
+      "remark": "货源站 chejiu888.online（CheJiu.VIP，Next.js 零售站）。商品数据内联在首页首屏 flight 数据中，无公开供货 API；orderPath / queryPath 为常规命名占位，正式对接须联系站方开通后替换端点与密钥。当前全局沙箱开启，派单走本地模拟。"
+    }
+  ],
+  "products": [
+    {
+      "id": "p1",
+      "catId": "c1",
+      "name": "爱奇艺黄金VIP会员",
+      "subtitle": "支持手机/电脑/平板，不含电视端",
+      "icon": "🥝",
+      "hue": "#22c55e",
+      "tags": [
+        "官方直充",
+        "秒到账"
+      ],
+      "badge": "热销",
+      "sort": 1,
+      "status": "active",
+      "sales": 12860,
+      "accountType": "phone",
+      "accountLabel": "爱奇艺账号（手机号）",
+      "accountPlaceholder": "请输入爱奇艺登录手机号",
+      "accountHint": "请填写登录爱奇艺的手机号，充值成功后可用该账号登录。请勿填写昵称。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p1-s1",
+          "name": "黄金VIP 月卡",
+          "faceValue": 25,
+          "price": 19.9,
+          "cost": 15.5,
+          "stock": 999,
+          "supplierId": "s1",
+          "supplierSku": "IQIYI_GOLD_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p1-s2",
+          "name": "黄金VIP 季卡",
+          "faceValue": 68,
+          "price": 55,
+          "cost": 43,
+          "stock": 999,
+          "supplierId": "s1",
+          "supplierSku": "IQIYI_GOLD_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p1-s3",
+          "name": "黄金VIP 年卡",
+          "faceValue": 248,
+          "price": 198,
+          "cost": 156,
+          "stock": 500,
+          "supplierId": "s1",
+          "supplierSku": "IQIYI_GOLD_12M",
+          "status": "active",
+          "sort": 3
+        },
+        {
+          "id": "p1-s4",
+          "name": "白金会员 季卡（含体育）",
+          "faceValue": 88,
+          "price": 72,
+          "cost": 58,
+          "stock": 120,
+          "supplierId": "s5",
+          "supplierSku": "IQIYI_PLAT_3M",
+          "status": "active",
+          "sort": 4
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "catId": "c1",
+      "name": "腾讯视频VIP会员",
+      "subtitle": "支持手机/电脑/平板，可与微信QQ绑定",
+      "icon": "🐧",
+      "hue": "#3b82f6",
+      "tags": [
+        "官方直充",
+        "秒到账"
+      ],
+      "badge": "热销",
+      "sort": 2,
+      "status": "active",
+      "sales": 10432,
+      "accountType": "account",
+      "accountLabel": "腾讯视频账号",
+      "accountPlaceholder": "手机号 / 微信 / QQ 号 均可",
+      "accountHint": "填写的账号即为授权登录账号，请填写常用账号，勿填错。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p2-s1",
+          "name": "VIP 月卡",
+          "faceValue": 30,
+          "price": 23.9,
+          "cost": 18,
+          "stock": 999,
+          "supplierId": "s1",
+          "supplierSku": "TX_VIP_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p2-s2",
+          "name": "VIP 季卡",
+          "faceValue": 88,
+          "price": 66,
+          "cost": 52,
+          "stock": 999,
+          "supplierId": "s1",
+          "supplierSku": "TX_VIP_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p2-s3",
+          "name": "VIP 年卡",
+          "faceValue": 288,
+          "price": 228,
+          "cost": 180,
+          "stock": 300,
+          "supplierId": "s1",
+          "supplierSku": "TX_VIP_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "catId": "c1",
+      "name": "优酷酷喵VIP",
+      "subtitle": "手机端 + 电视端通用",
+      "icon": "🅾️",
+      "hue": "#06b6d4",
+      "tags": [
+        "含电视端"
+      ],
+      "badge": "",
+      "sort": 3,
+      "status": "active",
+      "sales": 4120,
+      "accountType": "phone",
+      "accountLabel": "优酷账号（手机号）",
+      "accountPlaceholder": "请输入优酷登录手机号",
+      "accountHint": "酷喵会员含电视端权益，请填写优酷登录手机号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p3-s1",
+          "name": "酷喵月卡",
+          "faceValue": 39,
+          "price": 30,
+          "cost": 23.5,
+          "stock": 400,
+          "supplierId": "s1",
+          "supplierSku": "YOUKU_KUMIAO_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p3-s2",
+          "name": "酷喵季卡",
+          "faceValue": 109,
+          "price": 82,
+          "cost": 65,
+          "stock": 260,
+          "supplierId": "s1",
+          "supplierSku": "YOUKU_KUMIAO_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p3-s3",
+          "name": "酷喵年卡",
+          "faceValue": 359,
+          "price": 268,
+          "cost": 210,
+          "stock": 90,
+          "supplierId": "s1",
+          "supplierSku": "YOUKU_KUMIAO_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p4",
+      "catId": "c1",
+      "name": "芒果TV会员",
+      "subtitle": "综艺看不停，支持多端登录",
+      "icon": "🥭",
+      "hue": "#f97316",
+      "tags": [
+        "官方直充"
+      ],
+      "badge": "",
+      "sort": 4,
+      "status": "active",
+      "sales": 2860,
+      "accountType": "phone",
+      "accountLabel": "芒果TV账号（手机号）",
+      "accountPlaceholder": "请输入芒果TV登录手机号",
+      "accountHint": "请填写芒果TV登录手机号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p4-s1",
+          "name": "PC移动影视会员 月卡",
+          "faceValue": 22,
+          "price": 16.8,
+          "cost": 13,
+          "stock": 500,
+          "supplierId": "s1",
+          "supplierSku": "MGTV_VIP_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p4-s2",
+          "name": "PC移动影视会员 季卡",
+          "faceValue": 60,
+          "price": 45,
+          "cost": 35,
+          "stock": 300,
+          "supplierId": "s1",
+          "supplierSku": "MGTV_VIP_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p4-s3",
+          "name": "全屏会员 年卡",
+          "faceValue": 248,
+          "price": 186,
+          "cost": 148,
+          "stock": 150,
+          "supplierId": "s1",
+          "supplierSku": "MGTV_ALL_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p5",
+      "catId": "c1",
+      "name": "哔哩哔哩大会员",
+      "subtitle": "1080P 高码率 + 专属装扮",
+      "icon": "📺",
+      "hue": "#ec4899",
+      "tags": [
+        "官方直充",
+        "秒到账"
+      ],
+      "badge": "新上架",
+      "sort": 5,
+      "status": "active",
+      "sales": 6640,
+      "accountType": "uid",
+      "accountLabel": "B站 UID",
+      "accountPlaceholder": "请输入数字 UID（个人空间可查）",
+      "accountHint": "UID 为个人主页链接中的数字，例如 space.bilibili.com/12345678 中的 12345678。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p5-s1",
+          "name": "大会员 月卡",
+          "faceValue": 25,
+          "price": 18.8,
+          "cost": 14.2,
+          "stock": 999,
+          "supplierId": "s1",
+          "supplierSku": "BILI_BIG_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p5-s2",
+          "name": "大会员 季卡",
+          "faceValue": 68,
+          "price": 51,
+          "cost": 39.5,
+          "stock": 999,
+          "supplierId": "s1",
+          "supplierSku": "BILI_BIG_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p5-s3",
+          "name": "大会员 年卡",
+          "faceValue": 233,
+          "price": 168,
+          "cost": 132,
+          "stock": 400,
+          "supplierId": "s1",
+          "supplierSku": "BILI_BIG_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p6",
+      "catId": "c2",
+      "name": "QQ音乐豪华绿钻",
+      "subtitle": "无损音质 + 付费歌曲下载",
+      "icon": "🎵",
+      "hue": "#84cc16",
+      "tags": [
+        "秒到账"
+      ],
+      "badge": "",
+      "sort": 1,
+      "status": "active",
+      "sales": 7320,
+      "accountType": "account",
+      "accountLabel": "QQ音乐账号",
+      "accountPlaceholder": "QQ号 / 手机号 / 微信号",
+      "accountHint": "绿钻会发放到填写的账号，请确认账号无误。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p6-s1",
+          "name": "豪华绿钻 月卡",
+          "faceValue": 18,
+          "price": 12.9,
+          "cost": 9.5,
+          "stock": 999,
+          "supplierId": "s2",
+          "supplierSku": "QQMUSIC_GREEN_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p6-s2",
+          "name": "豪华绿钻 季卡",
+          "faceValue": 54,
+          "price": 36,
+          "cost": 27.5,
+          "stock": 999,
+          "supplierId": "s2",
+          "supplierSku": "QQMUSIC_GREEN_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p6-s3",
+          "name": "豪华绿钻 年卡",
+          "faceValue": 216,
+          "price": 138,
+          "cost": 105,
+          "stock": 500,
+          "supplierId": "s2",
+          "supplierSku": "QQMUSIC_GREEN_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p7",
+      "catId": "c2",
+      "name": "网易云音乐黑胶VIP",
+      "subtitle": "会员曲库 + 无损音质",
+      "icon": "🎼",
+      "hue": "#ef4444",
+      "tags": [
+        "秒到账"
+      ],
+      "badge": "",
+      "sort": 2,
+      "status": "active",
+      "sales": 5210,
+      "accountType": "phone",
+      "accountLabel": "网易云账号（手机号）",
+      "accountPlaceholder": "请输入网易云登录手机号",
+      "accountHint": "请填写登录网易云音乐的手机号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p7-s1",
+          "name": "黑胶VIP 月卡",
+          "faceValue": 18,
+          "price": 12.5,
+          "cost": 9,
+          "stock": 999,
+          "supplierId": "s2",
+          "supplierSku": "NETEASE_BLACK_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p7-s2",
+          "name": "黑胶VIP 季卡",
+          "faceValue": 45,
+          "price": 32,
+          "cost": 24,
+          "stock": 800,
+          "supplierId": "s2",
+          "supplierSku": "NETEASE_BLACK_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p7-s3",
+          "name": "黑胶VIP 年卡",
+          "faceValue": 168,
+          "price": 118,
+          "cost": 90,
+          "stock": 300,
+          "supplierId": "s2",
+          "supplierSku": "NETEASE_BLACK_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p8",
+      "catId": "c2",
+      "name": "酷狗豪华VIP",
+      "subtitle": "千万曲库 + 蝰蛇音效",
+      "icon": "🐶",
+      "hue": "#0ea5e9",
+      "tags": [],
+      "badge": "",
+      "sort": 3,
+      "status": "active",
+      "sales": 1420,
+      "accountType": "account",
+      "accountLabel": "酷狗账号",
+      "accountPlaceholder": "手机号 / 酷狗ID",
+      "accountHint": "请填写酷狗音乐登录账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p8-s1",
+          "name": "豪华VIP 月卡",
+          "faceValue": 15,
+          "price": 10.8,
+          "cost": 8,
+          "stock": 600,
+          "supplierId": "s2",
+          "supplierSku": "KUGOU_VIP_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p8-s2",
+          "name": "豪华VIP 年卡",
+          "faceValue": 150,
+          "price": 98,
+          "cost": 76,
+          "stock": 220,
+          "supplierId": "s2",
+          "supplierSku": "KUGOU_VIP_12M",
+          "status": "active",
+          "sort": 2
+        }
+      ]
+    },
+    {
+      "id": "p9",
+      "catId": "c3",
+      "name": "百度网盘超级会员",
+      "subtitle": "极速下载 + 5T 空间",
+      "icon": "☁️",
+      "hue": "#2563eb",
+      "tags": [
+        "官方直充",
+        "秒到账"
+      ],
+      "badge": "热销",
+      "sort": 1,
+      "status": "active",
+      "sales": 9880,
+      "accountType": "account",
+      "accountLabel": "百度账号",
+      "accountPlaceholder": "手机号 / 邮箱 / 用户名",
+      "accountHint": "超级会员会充值到该百度账号，请务必核对。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p9-s1",
+          "name": "超级会员 月卡",
+          "faceValue": 30,
+          "price": 22.8,
+          "cost": 17.5,
+          "stock": 999,
+          "supplierId": "s2",
+          "supplierSku": "BAIDU_SVIP_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p9-s2",
+          "name": "超级会员 季卡",
+          "faceValue": 88,
+          "price": 64,
+          "cost": 50,
+          "stock": 999,
+          "supplierId": "s2",
+          "supplierSku": "BAIDU_SVIP_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p9-s3",
+          "name": "超级会员 年卡",
+          "faceValue": 298,
+          "price": 218,
+          "cost": 172,
+          "stock": 350,
+          "supplierId": "s2",
+          "supplierSku": "BAIDU_SVIP_12M",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p10",
+      "catId": "c3",
+      "name": "WPS 超级会员",
+      "subtitle": "PDF 转换 + 云空间 + 模板库",
+      "icon": "📄",
+      "hue": "#dc2626",
+      "tags": [],
+      "badge": "",
+      "sort": 2,
+      "status": "active",
+      "sales": 2310,
+      "accountType": "phone",
+      "accountLabel": "WPS 账号（手机号）",
+      "accountPlaceholder": "请输入 WPS 登录手机号",
+      "accountHint": "请填写 WPS 登录手机号，充值后可在多端同步。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p10-s1",
+          "name": "超级会员 月卡",
+          "faceValue": 25,
+          "price": 17.9,
+          "cost": 13.5,
+          "stock": 400,
+          "supplierId": "s2",
+          "supplierSku": "WPS_SVIP_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p10-s2",
+          "name": "超级会员 年卡",
+          "faceValue": 248,
+          "price": 168,
+          "cost": 128,
+          "stock": 200,
+          "supplierId": "s2",
+          "supplierSku": "WPS_SVIP_12M",
+          "status": "active",
+          "sort": 2
+        }
+      ]
+    },
+    {
+      "id": "p11",
+      "catId": "c3",
+      "name": "阿里云盘 SVIP",
+      "subtitle": "不限速下载 + 大容量空间",
+      "icon": "🗄️",
+      "hue": "#7c3aed",
+      "tags": [
+        "不限速"
+      ],
+      "badge": "",
+      "sort": 3,
+      "status": "active",
+      "sales": 1760,
+      "accountType": "phone",
+      "accountLabel": "阿里云盘账号（手机号）",
+      "accountPlaceholder": "请输入阿里云盘登录手机号",
+      "accountHint": "请填写阿里云盘登录手机号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p11-s1",
+          "name": "SVIP 月卡",
+          "faceValue": 20,
+          "price": 14.5,
+          "cost": 11,
+          "stock": 300,
+          "supplierId": "s2",
+          "supplierSku": "ALIYUN_SVIP_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p11-s2",
+          "name": "SVIP 年卡",
+          "faceValue": 198,
+          "price": 138,
+          "cost": 106,
+          "stock": 150,
+          "supplierId": "s2",
+          "supplierSku": "ALIYUN_SVIP_12M",
+          "status": "active",
+          "sort": 2
+        }
+      ]
+    },
+    {
+      "id": "p12",
+      "catId": "c4",
+      "name": "王者荣耀点券",
+      "subtitle": "官方点券，按区充值",
+      "icon": "⚔️",
+      "hue": "#f59e0b",
+      "tags": [
+        "官方渠道"
+      ],
+      "badge": "热销",
+      "sort": 1,
+      "status": "active",
+      "sales": 15640,
+      "accountType": "gameid",
+      "accountLabel": "游戏账号（区服 + 角色）",
+      "accountPlaceholder": "例如：微信区 / 昵称【峡谷之风】",
+      "accountHint": "格式：登录方式+大区+角色昵称，例如「QQ区 微信一区 峡谷之风」。信息错误会导致充值失败且不退款。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p12-s1",
+          "name": "1000 点券",
+          "faceValue": 10,
+          "price": 9.2,
+          "cost": 7.6,
+          "stock": 9999,
+          "supplierId": "s4",
+          "supplierSku": "WZRY_COIN_1000",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p12-s2",
+          "name": "5000 点券",
+          "faceValue": 50,
+          "price": 45,
+          "cost": 37.5,
+          "stock": 9999,
+          "supplierId": "s4",
+          "supplierSku": "WZRY_COIN_5000",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p12-s3",
+          "name": "10000 点券",
+          "faceValue": 100,
+          "price": 88,
+          "cost": 73,
+          "stock": 5000,
+          "supplierId": "s4",
+          "supplierSku": "WZRY_COIN_10000",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    },
+    {
+      "id": "p13",
+      "catId": "c4",
+      "name": "和平精英 UC",
+      "subtitle": "UC 点券，直充到角色",
+      "icon": "🔫",
+      "hue": "#ea580c",
+      "tags": [],
+      "badge": "",
+      "sort": 2,
+      "status": "active",
+      "sales": 4320,
+      "accountType": "gameid",
+      "accountLabel": "游戏账号（区服 + 角色ID）",
+      "accountPlaceholder": "例如：微信区 / 角色ID 123456789",
+      "accountHint": "请填写区服与角色 ID（在游戏内个人资料页可查）。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p13-s1",
+          "name": "1000 UC",
+          "faceValue": 10,
+          "price": 9.5,
+          "cost": 8,
+          "stock": 5000,
+          "supplierId": "s4",
+          "supplierSku": "PUBG_UC_1000",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p13-s2",
+          "name": "5000 UC",
+          "faceValue": 50,
+          "price": 46.5,
+          "cost": 39,
+          "stock": 3000,
+          "supplierId": "s4",
+          "supplierSku": "PUBG_UC_5000",
+          "status": "active",
+          "sort": 2
+        }
+      ]
+    },
+    {
+      "id": "p14",
+      "catId": "c4",
+      "name": "网易游戏点卡（通用）",
+      "subtitle": "支持大话/梦幻等网易端游",
+      "icon": "🃏",
+      "hue": "#16a34a",
+      "tags": [
+        "卡密发货"
+      ],
+      "badge": "",
+      "sort": 3,
+      "status": "active",
+      "sales": 890,
+      "accountType": "uid",
+      "accountLabel": "网易账号 / UID",
+      "accountPlaceholder": "请输入网易通行证账号",
+      "accountHint": "卡密类商品将发送到订单页，请自行兑换。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p14-s1",
+          "name": "30 元点卡",
+          "faceValue": 30,
+          "price": 28.5,
+          "cost": 25,
+          "stock": 800,
+          "supplierId": "s4",
+          "supplierSku": "NETEASE_CARD_30",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p14-s2",
+          "name": "100 元点卡",
+          "faceValue": 100,
+          "price": 94,
+          "cost": 82,
+          "stock": 400,
+          "supplierId": "s4",
+          "supplierSku": "NETEASE_CARD_100",
+          "status": "active",
+          "sort": 2
+        }
+      ]
+    },
+    {
+      "id": "p15",
+      "catId": "c5",
+      "name": "X Premium（推特蓝V）",
+      "subtitle": "X 平台 Premium 会员，支持蓝标认证",
+      "icon": "𝕏",
+      "hue": "#111827",
+      "tags": [
+        "官方渠道",
+        "人工跟进"
+      ],
+      "badge": "专区",
+      "sort": 1,
+      "status": "active",
+      "sales": 3260,
+      "accountType": "username",
+      "accountLabel": "X 账号（@用户名）",
+      "accountPlaceholder": "请输入 @username",
+      "accountHint": "只需填写 @用户名，无需提供密码。开通前 3 天请勿修改头像/昵称/ID，否则可能失败。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p15-s1",
+          "name": "Premium 月付（1个月）",
+          "faceValue": 68,
+          "price": 45,
+          "cost": 31,
+          "stock": 200,
+          "supplierId": "s3",
+          "supplierSku": "X_PREMIUM_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p15-s2",
+          "name": "Premium 季付（3个月）",
+          "faceValue": 204,
+          "price": 128,
+          "cost": 88,
+          "stock": 120,
+          "supplierId": "s3",
+          "supplierSku": "X_PREMIUM_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p15-s3",
+          "name": "Premium 年付（1年）",
+          "faceValue": 816,
+          "price": 468,
+          "cost": 322,
+          "stock": 60,
+          "supplierId": "s3",
+          "supplierSku": "X_PREMIUM_12M",
+          "status": "active",
+          "sort": 3
+        },
+        {
+          "id": "p15-s4",
+          "name": "3个月 X Premium（CheJiu 渠道）",
+          "faceValue": 30,
+          "price": 30,
+          "cost": 30,
+          "stock": 100,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788723153642",
+          "status": "active",
+          "sort": 4
+        },
+        {
+          "id": "p15-s5",
+          "name": "6个月 X Premium（CheJiu 渠道 · 最受欢迎）",
+          "faceValue": 50,
+          "price": 50,
+          "cost": 50,
+          "stock": 80,
+          "supplierId": "s8",
+          "supplierSku": "premium-6",
+          "status": "active",
+          "sort": 5
+        }
+      ],
+      "notice": "【开通方式】支付验证通过后由后端自动处理，通常 10 分钟内完成；超时请通过订单联系方式联系客服。\n【开通条件】账号当前不能已有蓝V；开通前 3 天内不要更换头像、昵称、ID 等资料，否则可能开通失败。\n【风险说明】官方低价区渠道，正规来源，掉落率很低；个别账号因风控等极端情况可能受影响。\n【查询】可用订单号或 X 用户名在「订单查询」页查看进度。\n【注意】虚拟服务一经开通不支持退款，请确认账号信息无误后再下单。"
+    },
+    {
+      "id": "p16",
+      "catId": "c5",
+      "name": "Telegram Premium",
+      "subtitle": "TG 会员，解锁全部高级功能",
+      "icon": "✈️",
+      "hue": "#0ea5e9",
+      "tags": [
+        "人工跟进"
+      ],
+      "badge": "专区",
+      "sort": 2,
+      "status": "active",
+      "sales": 2140,
+      "accountType": "username",
+      "accountLabel": "Telegram 账号（@用户名）",
+      "accountPlaceholder": "请输入 @username 或 +86 手机号",
+      "accountHint": "请填写 @用户名；若设置了隐藏用户名，可填写绑定手机号。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p16-s1",
+          "name": "Premium 1个月",
+          "faceValue": 45,
+          "price": 32,
+          "cost": 21,
+          "stock": 300,
+          "supplierId": "s3",
+          "supplierSku": "TG_PREMIUM_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p16-s2",
+          "name": "Premium 3个月",
+          "faceValue": 135,
+          "price": 88,
+          "cost": 60,
+          "stock": 180,
+          "supplierId": "s3",
+          "supplierSku": "TG_PREMIUM_3M",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p16-s3",
+          "name": "Premium 12个月",
+          "faceValue": 540,
+          "price": 328,
+          "cost": 226,
+          "stock": 80,
+          "supplierId": "s3",
+          "supplierSku": "TG_PREMIUM_12M",
+          "status": "active",
+          "sort": 3
+        },
+        {
+          "id": "p16-s4",
+          "name": "TG会员 3个月（CheJiu 渠道）",
+          "faceValue": 93,
+          "price": 93,
+          "cost": 93,
+          "stock": 50,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788699685487",
+          "status": "active",
+          "sort": 4
+        },
+        {
+          "id": "p16-s5",
+          "name": "TG会员 6个月（CheJiu 渠道）",
+          "faceValue": 126,
+          "price": 126,
+          "cost": 126,
+          "stock": 30,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788722774790",
+          "status": "active",
+          "sort": 5
+        },
+        {
+          "id": "p16-s6",
+          "name": "TG会员 12个月（CheJiu 渠道）",
+          "faceValue": 213,
+          "price": 213,
+          "cost": 213,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1788722790880",
+          "status": "active",
+          "sort": 6
+        }
+      ],
+      "notice": "【开通方式】TG 会员目前无自动赠送，需人工开单，请耐心等待（工作时间 13:00–01:00 UTC+8），勿催。\n【账号要求】请填写 @用户名；若设置了隐藏用户名，可填写绑定手机号。\n【查询】可用订单号或 TG 账号在「订单查询」页查看进度。\n【注意】虚拟服务一经开通不支持退款，请确认账号信息无误后再下单。"
+    },
+    {
+      "id": "p17",
+      "catId": "c5",
+      "name": "YouTube Premium",
+      "subtitle": "去广告 + 后台播放 + YT Music",
+      "icon": "▶️",
+      "hue": "#dc2626",
+      "tags": [
+        "家庭组"
+      ],
+      "badge": "",
+      "sort": 3,
+      "status": "active",
+      "sales": 1180,
+      "accountType": "email",
+      "accountLabel": "Google 账号（邮箱）",
+      "accountPlaceholder": "请输入 Google 邮箱地址",
+      "accountHint": "采用家庭组方式开通，请填写完整的 Google 邮箱，开通后勿退出家庭组。",
+      "needConfirm": true,
+      "deliveryMode": "auto",
+      "skus": [
+        {
+          "id": "p17-s1",
+          "name": "Premium 1个月（家庭组）",
+          "faceValue": 68,
+          "price": 39,
+          "cost": 26,
+          "stock": 150,
+          "supplierId": "s3",
+          "supplierSku": "YT_PREMIUM_1M",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p17-s2",
+          "name": "Premium 12个月（家庭组）",
+          "faceValue": 816,
+          "price": 358,
+          "cost": 248,
+          "stock": 50,
+          "supplierId": "s3",
+          "supplierSku": "YT_PREMIUM_12M",
+          "status": "active",
+          "sort": 2
+        }
+      ]
+    },
+    {
+      "id": "p18",
+      "catId": "c6",
+      "name": "iCloud 长效邮箱 | 仅接收邮件",
+      "subtitle": "接收所有内容，长期可用 · 下单自动发货",
+      "icon": "📧",
+      "hue": "#8b5cf6",
+      "tags": [
+        "自动发货",
+        "长期可用",
+        "仅接收邮件"
+      ],
+      "badge": "热销",
+      "sort": 18,
+      "status": "active",
+      "sales": 44,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "iCloud 长效邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。严禁用于网络诈骗、赌博、洗钱、非法批量注册、侵犯公民个人信息、绕过平台风控等任何违法违规用途。租用期间账号所有权与管理权归货源方所有，账号失效或收不到邮件可联系客服售后。",
+      "skus": [
+        {
+          "id": "p18-s1",
+          "name": "长效邮箱 1 个",
+          "faceValue": 2,
+          "price": 2,
+          "cost": 2,
+          "stock": 4569,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_LONG_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p19",
+      "catId": "c6",
+      "name": "iCloud 短效邮箱 | 仅接收邮件",
+      "subtitle": "性价比之选，短周期使用 · 仅接收邮件",
+      "icon": "✉️",
+      "hue": "#a855f7",
+      "tags": [
+        "自动发货",
+        "性价比",
+        "仅接收邮件"
+      ],
+      "badge": "低价",
+      "sort": 19,
+      "status": "active",
+      "sales": 5,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "iCloud 短效邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。严禁用于网络诈骗、赌博、洗钱、非法批量注册、侵犯公民个人信息、绕过平台风控等任何违法违规用途。租用期间账号所有权与管理权归货源方所有，账号失效或收不到邮件可联系客服售后。",
+      "skus": [
+        {
+          "id": "p19-s1",
+          "name": "短效邮箱 1 个",
+          "faceValue": 1.5,
+          "price": 1.5,
+          "cost": 1.5,
+          "stock": 5062,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_SHORT_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p20",
+      "catId": "c7",
+      "name": "PayPal 专用 iCloud 邮箱 | 仅接收邮件",
+      "subtitle": "PayPal 注册 / 验证专用 · 仅接收邮件",
+      "icon": "💳",
+      "hue": "#0ea5e9",
+      "tags": [
+        "自动发货",
+        "PayPal 专用",
+        "仅接收邮件"
+      ],
+      "badge": "",
+      "sort": 20,
+      "status": "active",
+      "sales": 14,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "平台专用 iCloud 邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。「XX 专用」仅表示该邮箱曾用于对应平台的注册/验证场景，不构成对平台风控结果的任何保证。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。",
+      "skus": [
+        {
+          "id": "p20-s1",
+          "name": "PayPal 专用邮箱 1 个",
+          "faceValue": 1,
+          "price": 1,
+          "cost": 1,
+          "stock": 579,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_PAYPAL_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p21",
+      "catId": "c7",
+      "name": "Cash App 专用 iCloud 邮箱 | 仅接收邮件",
+      "subtitle": "Cash App 注册 / 验证专用 · 仅接收邮件",
+      "icon": "💵",
+      "hue": "#22c55e",
+      "tags": [
+        "自动发货",
+        "Cash App 专用",
+        "仅接收邮件"
+      ],
+      "badge": "",
+      "sort": 21,
+      "status": "active",
+      "sales": 2,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "平台专用 iCloud 邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。「XX 专用」仅表示该邮箱曾用于对应平台的注册/验证场景，不构成对平台风控结果的任何保证。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。",
+      "skus": [
+        {
+          "id": "p21-s1",
+          "name": "Cash App 专用邮箱 1 个",
+          "faceValue": 1,
+          "price": 1,
+          "cost": 1,
+          "stock": 2164,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_CASHAPP_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p22",
+      "catId": "c7",
+      "name": "TikTok 专用 iCloud 邮箱 | 仅接收邮件",
+      "subtitle": "TikTok 注册 / 验证专用 · 仅接收邮件",
+      "icon": "🎵",
+      "hue": "#ec4899",
+      "tags": [
+        "自动发货",
+        "TikTok 专用",
+        "仅接收邮件"
+      ],
+      "badge": "",
+      "sort": 22,
+      "status": "active",
+      "sales": 36,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "平台专用 iCloud 邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。「XX 专用」仅表示该邮箱曾用于对应平台的注册/验证场景，不构成对平台风控结果的任何保证。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。",
+      "skus": [
+        {
+          "id": "p22-s1",
+          "name": "TikTok 专用邮箱 1 个",
+          "faceValue": 1,
+          "price": 1,
+          "cost": 1,
+          "stock": 392,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_TIKTOK_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p23",
+      "catId": "c7",
+      "name": "Shopify 专用 iCloud 邮箱 | 仅接收邮件",
+      "subtitle": "Shopify 注册 / 验证专用 · 仅接收邮件",
+      "icon": "🛒",
+      "hue": "#84cc16",
+      "tags": [
+        "自动发货",
+        "Shopify 专用",
+        "仅接收邮件"
+      ],
+      "badge": "",
+      "sort": 23,
+      "status": "active",
+      "sales": 0,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "平台专用 iCloud 邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。「XX 专用」仅表示该邮箱曾用于对应平台的注册/验证场景，不构成对平台风控结果的任何保证。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。",
+      "skus": [
+        {
+          "id": "p23-s1",
+          "name": "Shopify 专用邮箱 1 个",
+          "faceValue": 1,
+          "price": 1,
+          "cost": 1,
+          "stock": 3730,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_SHOPIFY_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p24",
+      "catId": "c7",
+      "name": "Claude 专用 iCloud 邮箱 | 仅接收邮件",
+      "subtitle": "Claude 注册 / 验证专用 · 仅接收邮件",
+      "icon": "🤖",
+      "hue": "#f97316",
+      "tags": [
+        "自动发货",
+        "Claude 专用",
+        "仅接收邮件"
+      ],
+      "badge": "",
+      "sort": 24,
+      "status": "active",
+      "sales": 1,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "平台专用 iCloud 邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。「XX 专用」仅表示该邮箱曾用于对应平台的注册/验证场景，不构成对平台风控结果的任何保证。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。",
+      "skus": [
+        {
+          "id": "p24-s1",
+          "name": "Claude 专用邮箱 1 个",
+          "faceValue": 1,
+          "price": 1,
+          "cost": 1,
+          "stock": 1464,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_CLAUDE_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p25",
+      "catId": "c7",
+      "name": "Cash App 专用老号 iCloud 邮箱 | 仅接收邮件",
+      "subtitle": "Cash App 专用老号（注册时间较早）· 仅接收邮件",
+      "icon": "🏦",
+      "hue": "#14b8a6",
+      "tags": [
+        "自动发货",
+        "老号",
+        "仅接收邮件"
+      ],
+      "badge": "",
+      "sort": 25,
+      "status": "active",
+      "sales": 2,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "平台专用老号 iCloud 邮箱账号有偿租用（非账号出售），仅获得邮件接收使用权：仅支持收取邮件，无法登录 iCloud 客户端或使用其他 iCloud 功能。老号仅表示该账号注册时间较早，不构成对平台风控结果的任何保证。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。",
+      "skus": [
+        {
+          "id": "p25-s1",
+          "name": "Cash App 老号邮箱 1 个",
+          "faceValue": 1.2,
+          "price": 1.2,
+          "cost": 1.2,
+          "stock": 540,
+          "supplierId": "s7",
+          "supplierSku": "ICLOUD_CASHAPP_OLD_MAIL",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p26",
+      "catId": "c8",
+      "name": "Hotmail 令牌长效邮箱 | 已绑辅邮 OAuth2 / IMAP / GRAPH",
+      "subtitle": "已绑定辅邮，已授权 OAuth2 / IMAP / GRAPH · 长效令牌",
+      "icon": "📨",
+      "hue": "#eab308",
+      "tags": [
+        "自动发货",
+        "长效令牌",
+        "已绑辅邮"
+      ],
+      "badge": "",
+      "sort": 26,
+      "status": "active",
+      "sales": 0,
+      "accountType": "none",
+      "accountLabel": "免填（自动发货）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为邮箱账号，下单后自动发货，无需填写充值账号。",
+      "needConfirm": false,
+      "deliveryMode": "auto",
+      "notice": "Hotmail 长效令牌邮箱账号有偿租用（非账号出售）：已绑定辅助邮箱，已授权 OAuth2 / IMAP / GRAPH 协议访问。严禁用于网络诈骗、赌博、洗钱、非法注册或批量注册第三方平台账号、侵犯公民个人信息、绕过平台风控等任何违法违规用途。货源当前库存为 0（售罄），到货后可正常下单。",
+      "skus": [
+        {
+          "id": "p26-s1",
+          "name": "Hotmail 令牌邮箱 1 个",
+          "faceValue": 0.04,
+          "price": 0.04,
+          "cost": 0.04,
+          "stock": 0,
+          "supplierId": "s7",
+          "supplierSku": "HOTMAIL_TOKEN_AUX",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p27",
+      "catId": "c9",
+      "name": "GPT Plus 正规充值月套餐",
+      "subtitle": "GPT 充值卡密 · 30 天订阅 · 原账号续期",
+      "icon": "🤖",
+      "hue": "#10a37f",
+      "tags": [
+        "GPT",
+        "代充",
+        "人工交付"
+      ],
+      "badge": "热销",
+      "sort": 27,
+      "status": "active",
+      "sales": 29,
+      "accountType": "none",
+      "accountLabel": "免填（卡密发放）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为 GPT 充值卡密，下单并支付后发放卡密，无需填写账号。",
+      "needConfirm": false,
+      "deliveryMode": "manual",
+      "notice": "【商品类型】GPT 充值卡密（人工发放）。\n【服务内容】独立账号充值，原账号订阅 30 天；支持开票（税点自理）。\n【购买前请确认】需在充值中心核销卡密；同档或更高套餐可能无法重复充值。\n【交付与使用】1. 下单并完成支付；2. 用订单号在本站「订单查询」查看卡密；3. 打开充值中心 https://gpt.bugan.cn 输入卡密完成验证与充值，以充值中心最终状态为准。\n【说明】「卡密已交付」只代表发货完成，「充值成功」需在充值中心确认。\n【适合人群】适合个人学习、轻度使用与日常 GPT 辅助场景。",
+      "skus": [
+        {
+          "id": "p27-s1",
+          "name": "Plus 30天",
+          "faceValue": 138,
+          "price": 113,
+          "cost": 113,
+          "stock": 9967,
+          "supplierId": "s9",
+          "supplierSku": "gpt-codex-plus",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p28",
+      "catId": "c9",
+      "name": "GPT Pro 5x 正规代充 · 30天",
+      "subtitle": "高频使用 / 专业项目 · 人工发放卡密",
+      "icon": "🤖",
+      "hue": "#0f766e",
+      "tags": [
+        "GPT",
+        "代充",
+        "人工交付"
+      ],
+      "badge": "热门",
+      "sort": 28,
+      "status": "active",
+      "sales": 7,
+      "accountType": "none",
+      "accountLabel": "免填（卡密发放）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为 GPT 充值卡密，下单并支付后发放卡密，无需填写账号。",
+      "needConfirm": false,
+      "deliveryMode": "manual",
+      "notice": "【商品类型】GPT 充值卡密（人工发放）。\n【服务内容】独立账号充值，原账号订阅 30 天；支持开票（税点自理）。\n【购买前请确认】需在充值中心核销卡密；同档或更高套餐可能无法重复充值。\n【交付与使用】1. 下单并完成支付；2. 用订单号在本站「订单查询」查看卡密；3. 打开充值中心 https://gpt.bugan.cn 输入卡密完成验证与充值，以充值中心最终状态为准。\n【说明】「卡密已交付」只代表发货完成，「充值成功」需在充值中心确认。\n【适合人群】适合高频使用、专业项目与中等强度需求，性价比推荐。",
+      "skus": [
+        {
+          "id": "p28-s1",
+          "name": "Pro 5x 30天",
+          "faceValue": 718,
+          "price": 650,
+          "cost": 650,
+          "stock": 9992,
+          "supplierId": "s9",
+          "supplierSku": "gpt-codex-pro-5x",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p29",
+      "catId": "c9",
+      "name": "GPT Pro 20x 正规代充 · 30天续费专用",
+      "subtitle": "高强度任务 / 团队协作 · 暂不支持新开",
+      "icon": "🤖",
+      "hue": "#7c3aed",
+      "tags": [
+        "GPT",
+        "代充",
+        "仅续费"
+      ],
+      "badge": "",
+      "sort": 29,
+      "status": "active",
+      "sales": 0,
+      "accountType": "none",
+      "accountLabel": "免填（卡密发放）",
+      "accountPlaceholder": "",
+      "accountHint": "本商品为 GPT 充值卡密，下单并支付后发放卡密，无需填写账号。",
+      "needConfirm": false,
+      "deliveryMode": "manual",
+      "notice": "【重要】本套餐为续费专用，暂不支持新开账号，请确认你的账号已有 Pro 20x 权益再下单。\n【商品类型】GPT 充值卡密（人工发放）。\n【服务内容】独立账号充值，原账号订阅 30 天；支持开票（税点自理）。\n【购买前请确认】需在充值中心核销卡密；同档或更高套餐可能无法重复充值。\n【交付与使用】1. 下单并完成支付；2. 用订单号在本站「订单查询」查看卡密；3. 打开充值中心 https://gpt.bugan.cn 输入卡密完成验证与充值，以充值中心最终状态为准。\n【适合人群】适合高强度任务、多人协作与团队级使用场景。",
+      "skus": [
+        {
+          "id": "p29-s1",
+          "name": "Pro 20x 30天",
+          "faceValue": 1380,
+          "price": 1050,
+          "cost": 1050,
+          "stock": 9999,
+          "supplierId": "s9",
+          "supplierSku": "gpt-codex-pro-20x",
+          "status": "active",
+          "sort": 1
+        }
+      ]
+    },
+    {
+      "id": "p30",
+      "catId": "c5",
+      "name": "X Premium+ 会员",
+      "subtitle": "X 平台最高档会员 · 人工开单 · 手动处理勿催",
+      "icon": "𝕏",
+      "hue": "#1d4ed8",
+      "tags": [
+        "官方渠道",
+        "人工开单",
+        "高价值"
+      ],
+      "badge": "旗舰",
+      "sort": 4,
+      "status": "active",
+      "sales": 0,
+      "accountType": "username",
+      "accountLabel": "X 账号（@用户名）",
+      "accountPlaceholder": "请输入 @username",
+      "accountHint": "只需填写 @用户名，无需提供密码。开通前 3 天请勿修改头像/昵称/ID，否则可能开通失败。",
+      "needConfirm": true,
+      "deliveryMode": "manual",
+      "notice": "【开通方式】人工开单，支付后由人工处理，请耐心等待（工作时间 13:00–01:00 UTC+8），勿催。\n【开通条件】账号当前不能已有蓝V；开通前 3 天内不要更换头像、昵称、ID 等资料，否则可能开通失败。\n【风险说明】官方低价区渠道，正规来源，掉落率很低；个别账号因风控等极端情况可能受影响。\n【查询】可用订单号或 X 用户名在「订单查询」页查看进度。\n【注意】虚拟服务一经开通不支持退款，请确认账号信息无误后再下单。",
+      "skus": [
+        {
+          "id": "p30-s1",
+          "name": "Premium+ 3个月",
+          "faceValue": 666,
+          "price": 666,
+          "cost": 666,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1789463452209",
+          "status": "active",
+          "sort": 1
+        },
+        {
+          "id": "p30-s2",
+          "name": "Premium+ 6个月",
+          "faceValue": 999,
+          "price": 999,
+          "cost": 999,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1789463454465",
+          "status": "active",
+          "sort": 2
+        },
+        {
+          "id": "p30-s3",
+          "name": "Premium+ 12个月",
+          "faceValue": 1132.2,
+          "price": 1132.2,
+          "cost": 1132.2,
+          "stock": 20,
+          "supplierId": "s8",
+          "supplierSku": "premium-1789468787717",
+          "status": "active",
+          "sort": 3
+        }
+      ]
+    }
+  ],
+  "orders": [],
+  "logs": [],
+  "admins": [
+    {
+      "id": "a1",
+      "username": "admin",
+      "password": "admin888",
+      "name": "超级管理员",
+      "role": "owner",
+      "lastLogin": ""
+    }
+  ],
+  "meta": {
+    "createdAt": "",
+    "version": "1.0.0",
+    "updatedAt": "2026-09-21T04:09:23.010Z"
+  }
+}

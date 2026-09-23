@@ -1,0 +1,40 @@
+# ============================================================
+# 云充站 · 版本控制忽略规则
+# ============================================================
+
+# ---- 运行时数据库（含明文 appSecret / 管理员口令，禁止入库）----
+data/db.json
+data/db.json.*
+data/*.broken-*
+data/*.tmp
+
+# ---- 浏览器渲染检查产物（截图与调试文件，约 60MB）----
+shots/
+
+# ---- Node ----
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ---- 抓取脚本产物 ----
+*-raw.html
+*-flight.txt
+*-eval.json
+*-api.json
+*-text.txt
+.grab-profile-*/
+
+# ---- 编辑器 / IDE ----
+.codebuddy/
+.idea/
+.vscode/
+*.swp
+
+# ---- 操作系统 ----
+.DS_Store
+Thumbs.db
+
+# ---- 日志与临时文件 ----
+*.log
+*.tmp
+*.bak

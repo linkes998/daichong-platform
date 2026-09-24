@@ -162,10 +162,11 @@ function hexA(hex, a) {
   return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
-/** 状态徽标 */
+/** 状态徽标（文案优先走 i18n，未加载 i18n.js 时回退中文） */
 function statusChip(status) {
   const s = STATUS_MAP[status] || { text: status, cls: 'chip', dot: 'dot-idle', icon: '•' };
-  return `<span class="chip ${s.cls}">${s.text}</span>`;
+  const text = typeof statusLabel === 'function' ? statusLabel(status) : s.text;
+  return `<span class="chip ${s.cls}">${text}</span>`;
 }
 
 function qs(name) {

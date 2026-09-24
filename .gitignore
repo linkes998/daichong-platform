@@ -38,3 +38,7 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+
+# ---- 运维记录（含服务器地址等敏感信息，禁止入库）----
+docs/部署记录.md
+docs/*.local.md

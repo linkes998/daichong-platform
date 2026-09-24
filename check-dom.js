@@ -7,9 +7,9 @@ const path = require('path');
 
 const ROOT = __dirname;
 const pages = [
-  { name: 'index.html', js: ['assets/app.js', 'assets/store.js'] },
-  { name: 'query.html', js: ['assets/app.js', 'assets/query.js'] },
-  { name: 'pay.html', js: ['assets/app.js'] },
+  { name: 'index.html', js: ['assets/app.js', 'assets/i18n.js', 'assets/store.js'] },
+  { name: 'query.html', js: ['assets/app.js', 'assets/i18n.js', 'assets/query.js'] },
+  { name: 'pay.html', js: ['assets/app.js', 'assets/i18n.js'] },
   { name: 'admin.html', js: ['assets/app.js', 'assets/admin.js'] },
 ];
 
@@ -44,7 +44,7 @@ pages.forEach((page) => {
 /* 检查 onclick 内联调用到的函数是否已定义 */
 const storeJs = rd('public/assets/store.js');
 const adminJs = rd('public/assets/admin.js');
-const allJs = storeJs + adminJs + rd('public/assets/query.js') + rd('public/assets/app.js');
+const allJs = storeJs + adminJs + rd('public/assets/query.js') + rd('public/assets/app.js') + rd('public/assets/i18n.js');
 const htmlAll = ['index.html', 'query.html', 'pay.html', 'admin.html'].map((f) => rd('public/' + f)).join('\n');
 const inlineCalls = new Set([...htmlAll.matchAll(/on(?:click|change|input)=["']([a-zA-Z_$][\w$]*)\(/g)].map((x) => x[1]));
 const tmplCalls = new Set([...(storeJs + adminJs).matchAll(/on(?:click|change)=["']([a-zA-Z_$][\w$]*)\(/g)].map((x) => x[1]));
@@ -65,6 +65,29 @@ const missCss = keyClasses.filter((c) => !new RegExp(`\\.${c}[\\s,{:.]`).test(cs
 if (missCss.length) { problems++; console.log(`\x1b[31m✗ CSS 缺少类定义：${missCss.join(', ')}\x1b[0m`); }
 else console.log(`\x1b[32m✓\x1b[0m  检查的 ${keyClasses.length} 个关键类样式全部存在`);
 
-const idsNotStyled = [];
+/* 语法检查：所有前端与服务端脚本必须能通过 Node 语法解析 */
+const { execFileSync } = require('child_process');
+const syntaxTargets = [
+  'public/assets/app.js', 'public/assets/i18n.js', 'public/assets/store.js',
+  'public/assets/query.js', 'public/assets/admin.js',
+  'server.js', 'lib/db.js', 'lib/supplier.js', 'lib/payment.js', 'lib/i18n.js',
+];
+const syntaxBad = [];
+syntaxTargets.forEach((f) => {
+  try {
+    execFileSync(process.execPath, ['--check', path.join(ROOT, f)], { stdio: 'pipe' });
+  } catch (e) {
+    const line = String(e.stderr || e.message).split('\n').find((l) => /Error/.test(l)) || '语法错误';
+    syntaxBad.push(`${f} → ${line.trim()}`);
+  }
+});
+if (syntaxBad.length) {
+  problems++;
+  console.log(`\x1b[31m✗ 以下文件存在语法错误：\x1b[0m`);
+  syntaxBad.forEach((s) => console.log('   · ' + s));
+} else {
+  console.log(`\x1b[32m✓\x1b[0m  ${syntaxTargets.length} 个脚本语法检查通过`);
+}
+
 console.log('\n' + (problems ? `\x1b[31m发现 ${problems} 处问题\x1b[0m` : '\x1b[32m静态检查全部通过 ✓\x1b[0m') + '\n');
 process.exitCode = problems ? 1 : 0;

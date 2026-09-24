@@ -907,11 +907,28 @@ async function delCategory(id, name) {
 /* ============================================================
    6. 支付配置
    ============================================================ */
+/* ============================================================
+   6. 支付配置（支付方式开关 + 网关参数 + 各收款通道参数）
+   ============================================================ */
 async function renderPay() {
   const res = await api('/api/admin/settings');
   if (!res.ok) return;
   CACHE.payMethods = res.payMethods;
   CACHE.payConfig = res.payConfig;
+  CACHE.channelDefaults = res.channelDefaults || {};
+
+  const cfg = res.payConfig || {};
+  const ch = cfg.channels || {};
+  const def = CACHE.channelDefaults;
+  const usdt = Object.assign({}, def.usdt || {}, ch.usdt || {});
+  const cc = Object.assign({}, def.creditcard || {}, ch.creditcard || {});
+  const pp = Object.assign({}, def.paypal || {}, ch.paypal || {});
+  const on = (code) => {
+    const m = (res.payMethods || []).find((x) => x.code === code);
+    return !!(m && m.enabled);
+  };
+  const offHint = (code) =>
+    on(code) ? '' : '<div class="hint hint-warn" style="margin:-6px 0 12px">⚠️ 该方式当前已关闭，配置保存后仍需在上方开关中启用才会出现在前台收银台。</div>';
 
   document.getElementById('pageBody').innerHTML = `
     <div class="chart-row" style="grid-template-columns:1fr 1.2fr;margin-top:0">
@@ -921,47 +938,180 @@ async function renderPay() {
         <div id="pmList" style="display:grid;gap:12px">
           ${res.payMethods.map((m) => `<div class="row-flex" style="padding:11px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px">
             <span style="font-size:17px">${m.icon || '💳'}</span>
-            <div><b style="font-size:13.5px">${escapeHtml(m.name)}</b><div class="muted" style="font-size:11.5px">code: ${m.code}</div></div>
-            <label class="switch ${m.enabled ? 'on' : ''}" style="margin-left:auto" data-pm="${m.code}" onclick="this.classList.toggle('on')">
+            <div><b style="font-size:13.5px">${escapeHtml(m.name)}</b>
+              <div class="muted" style="font-size:11.5px">code: ${m.code}${m.kind ? ' · 类型 ' + m.kind : ''}</div></div>
+            <label class="switch ${m.enabled ? 'on' : ''}" style="margin-left:auto" data-pm="${m.code}" onclick="this.classList.toggle('on');this.querySelector('span:last-child').textContent=this.classList.contains('on')?'已启用':'已关闭'">
               <span class="track"></span><span>${m.enabled ? '已启用' : '已关闭'}</span></label>
           </div>`).join('')}
         </div>
       </div>
       <div class="chart-card">
-        <h3>支付网关参数</h3>
+        <h3>支付网关参数（国内扫码通道）</h3>
         <div class="sub">沙箱模式开启时不会发起真实支付请求</div>
         <div class="form-grid">
           <div class="field"><label>网关类型</label>
             <select class="select" id="gType">
-              <option value="epay" ${res.payConfig.gateway === 'epay' ? 'selected' : ''}>易支付 / 彩虹聚合</option>
-              <option value="alipay" ${res.payConfig.gateway === 'alipay' ? 'selected' : ''}>支付宝当面付</option>
-              <option value="wechat" ${res.payConfig.gateway === 'wechat' ? 'selected' : ''}>微信 Native 支付</option>
+              <option value="epay" ${cfg.gateway === 'epay' ? 'selected' : ''}>易支付 / 彩虹聚合</option>
+              <option value="alipay" ${cfg.gateway === 'alipay' ? 'selected' : ''}>支付宝当面付</option>
+              <option value="wechat" ${cfg.gateway === 'wechat' ? 'selected' : ''}>微信 Native 支付</option>
             </select></div>
-          <div class="field"><label>商户 ID</label><input class="input" id="gMid" value="${escapeHtml(res.payConfig.merchantId || '')}"></div>
-          <div class="field full"><label>网关接口地址</label><input class="input" id="gUrl" value="${escapeHtml(res.payConfig.apiUrl || '')}"></div>
-          <div class="field full"><label>商户密钥</label><input class="input" id="gKey" value="${escapeHtml(res.payConfig.merchantKey || '')}" placeholder="用于 MD5 签名，请妥善保管"></div>
-          <div class="field full"><label>异步通知地址</label><input class="input" id="gNotify" value="${escapeHtml(res.payConfig.notifyUrl || '')}"></div>
-          <div class="field full"><label class="switch ${res.payConfig.sandboxMode !== false ? 'on' : ''}" id="gSandbox" onclick="this.classList.toggle('on')">
+          <div class="field"><label>商户 ID</label><input class="input" id="gMid" value="${escapeHtml(cfg.merchantId || '')}"></div>
+          <div class="field full"><label>网关接口地址</label><input class="input" id="gUrl" value="${escapeHtml(cfg.apiUrl || '')}"></div>
+          <div class="field full"><label>商户密钥</label><input class="input" id="gKey" value="${escapeHtml(cfg.merchantKey || '')}" placeholder="用于 MD5 签名，请妥善保管"></div>
+          <div class="field full"><label>异步通知地址</label><input class="input" id="gNotify" value="${escapeHtml(cfg.notifyUrl || '')}"></div>
+          <div class="field full"><label class="switch ${cfg.sandboxMode !== false ? 'on' : ''}" id="gSandbox" onclick="this.classList.toggle('on')">
             <span class="track"></span><span>沙箱模式（当前为演示环境，建议保持开启）</span></label></div>
-          <div class="field full"><label class="switch ${res.payConfig.autoRefundOnFail ? 'on' : ''}" id="gAutoRefund" onclick="this.classList.toggle('on')">
+          <div class="field full"><label class="switch ${cfg.autoRefundOnFail ? 'on' : ''}" id="gAutoRefund" onclick="this.classList.toggle('on')">
             <span class="track"></span><span>充值失败自动退款（需网关支持退款接口）</span></label></div>
         </div>
-        <button class="btn btn-primary" style="margin-top:6px" onclick="savePay()">保存支付配置</button>
       </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head"><h3>🪙 USDT 收款通道设置</h3>
+        <span class="chip ${on('usdt') ? 'chip-ok' : ''}">${on('usdt') ? '前台已启用' : '前台已关闭'}</span></div>
+      <div class="panel-body">
+        ${offHint('usdt')}
+        <div class="form-grid">
+          <div class="field"><label>收款网络</label>
+            <select class="select" id="uNetwork">
+              ${['TRC20', 'ERC20', 'BEP20', 'Polygon', 'Solana']
+                .map((n) => `<option value="${n}" ${usdt.network === n ? 'selected' : ''}>${n}</option>`)
+                .join('')}
+            </select></div>
+          <div class="field"><label>最小收款金额（USDT）</label>
+            <input class="input" id="uMin" type="number" step="0.01" value="${Number(usdt.minAmount) || 0}"></div>
+          <div class="field"><label>参考汇率（1 USDT = ? CNY）</label>
+            <input class="input" id="uRate" type="number" step="0.0001" value="${Number(usdt.rate) || 0}"></div>
+          <div class="field"><label>需要确认数</label>
+            <input class="input" id="uConf" type="number" value="${Number(usdt.confirmations) || 1}"></div>
+          <div class="field full"><label>收款地址 <span class="req">*</span></label>
+            <input class="input mono" id="uAddr" value="${escapeHtml(usdt.address || '')}" placeholder="例如 TRC20 地址 TXxx…">
+            <div class="hint">前台收银台会展示该地址与换算后的 USDT 金额，并要求买家回填转账的 TxID 以便对账。</div></div>
+          <div class="field"><label>支付窗口（分钟）</label>
+            <input class="input" id="uWindow" type="number" value="${Number(usdt.payWindowMinutes) || 30}"></div>
+          <div class="field full"><label class="switch ${usdt.uniqueAmount !== false ? 'on' : ''}" id="uUnique" onclick="this.classList.toggle('on')">
+            <span class="track"></span><span>金额加唯一尾数（便于链上对账，推荐开启）</span></label></div>
+          <div class="field full"><label>二维码图片地址模板（可选）</label>
+            <input class="input" id="uQr" value="${escapeHtml(usdt.qrTemplate || '')}" placeholder="留空则使用内置示意图；支持 {address} 与 {amount} 占位">
+            <div class="hint">如需可被钱包真实扫描的二维码，填入你的二维码服务地址，例如 <span class="mono">https://你的域名/qr?text={address}</span>。</div></div>
+          <div class="field full"><label>收款提示（展示在收银台）</label>
+            <textarea class="textarea" id="uTips" placeholder="例如：请务必使用所选网络转账，跨链转账将导致资金丢失。">${escapeHtml(usdt.tips || '')}</textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-row" style="margin-top:18px">
+      <div class="chart-card">
+        <h3>💳 国际信用卡通道</h3>
+        <div class="sub">Stripe Checkout 托管收银台，或任意托管页</div>
+        ${offHint('creditcard')}
+        <div class="form-grid">
+          <div class="field"><label>服务商</label>
+            <select class="select" id="cProvider">
+              <option value="stripe" ${cc.provider === 'stripe' ? 'selected' : ''}>Stripe Checkout</option>
+              <option value="generic" ${cc.provider === 'generic' ? 'selected' : ''}>通用托管页</option>
+            </select></div>
+          <div class="field"><label>结算币种</label>
+            <input class="input" id="cCur" value="${escapeHtml(cc.currency || 'USD')}"></div>
+          <div class="field"><label>汇率（1 外币 = ? CNY）</label>
+            <input class="input" id="cRate" type="number" step="0.0001" value="${Number(cc.rate) || 0}"></div>
+          <div class="field"><label>账单显示名</label>
+            <input class="input" id="cStmt" value="${escapeHtml(cc.statement || '')}"></div>
+          <div class="field full"><label>Publishable Key（下发前台，可公开）</label>
+            <input class="input mono" id="cPub" value="${escapeHtml(cc.publishableKey || '')}" placeholder="pk_live_…"></div>
+          <div class="field full"><label>Secret Key（仅服务端使用，不会下发前台）</label>
+            <input class="input mono" id="cSec" type="password" value="${escapeHtml(cc.secretKey || '')}" placeholder="sk_live_…">
+            <div class="hint">留空表示未配置：前台仍可下单，但会提示联系客服完成收款。</div></div>
+          <div class="field full"><label>Stripe 接口地址</label>
+            <input class="input" id="cApi" value="${escapeHtml(cc.apiUrl || 'https://api.stripe.com/v1/checkout/sessions')}"></div>
+          <div class="field full"><label>通用托管页地址（服务商选「通用托管页」时使用）</label>
+            <input class="input" id="cGeneric" value="${escapeHtml(cc.genericPayUrl || '')}" placeholder="https://gateway.example/pay?amount={amount}&order={orderNo}&currency={currency}"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>🅿️ PayPal 通道</h3>
+        <div class="sub">PayPal 标准收款 + IPN 异步通知</div>
+        ${offHint('paypal')}
+        <div class="form-grid">
+          <div class="field full"><label>收款账号（PayPal 邮箱）<span class="req">*</span></label>
+            <input class="input" id="ppEmail" value="${escapeHtml(pp.merchantEmail || '')}" placeholder="pay@example.com"></div>
+          <div class="field"><label>模式</label>
+            <select class="select" id="ppMode">
+              <option value="sandbox" ${pp.mode !== 'live' ? 'selected' : ''}>Sandbox 沙箱</option>
+              <option value="live" ${pp.mode === 'live' ? 'selected' : ''}>Live 生产</option>
+            </select></div>
+          <div class="field"><label>结算币种</label>
+            <input class="input" id="ppCur" value="${escapeHtml(pp.currency || 'USD')}"></div>
+          <div class="field"><label>汇率（1 外币 = ? CNY）</label>
+            <input class="input" id="ppRate" type="number" step="0.0001" value="${Number(pp.rate) || 0}"></div>
+          <div class="field full"><label>IPN 通知地址</label>
+            <input class="input" id="ppIpn" value="${escapeHtml(pp.ipnUrl || '')}" placeholder="留空则使用站点默认回调 /api/callback/pay"></div>
+          <div class="field full"><label>Client ID（可选）</label>
+            <input class="input mono" id="ppClient" value="${escapeHtml(pp.clientId || '')}"></div>
+          <div class="field full"><label>Client Secret（可选，仅服务端）</label>
+            <input class="input mono" id="ppSecret" type="password" value="${escapeHtml(pp.clientSecret || '')}"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toolbar" style="margin-top:18px;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="savePay()">保存支付配置</button>
     </div>`;
 }
 
 async function savePay() {
-  const methods = CACHE.payMethods.map((m) => Object.assign({}, m, { enabled: document.querySelector(`[data-pm="${m.code}"]`).classList.contains('on') }));
-  const v = (k) => document.getElementById(k).value.trim();
+  const v = (k) => { const e = document.getElementById(k); return e ? e.value.trim() : ''; };
+  const on = (k) => { const e = document.getElementById(k); return !!(e && e.classList.contains('on')); };
+  const methods = CACHE.payMethods.map((m) => {
+    const sw = document.querySelector(`[data-pm="${m.code}"]`);
+    return Object.assign({}, m, { enabled: !!(sw && sw.classList.contains('on')) });
+  });
   const res = await api('/api/admin/settings', {
     method: 'POST',
     body: {
       payMethods: methods,
       payConfig: {
-        gateway: v('gType'), merchantId: v('gMid'), apiUrl: v('gUrl'), merchantKey: v('gKey'), notifyUrl: v('gNotify'),
-        sandboxMode: document.getElementById('gSandbox').classList.contains('on'),
-        autoRefundOnFail: document.getElementById('gAutoRefund').classList.contains('on'),
+        gateway: v('gType'),
+        merchantId: v('gMid'),
+        apiUrl: v('gUrl'),
+        merchantKey: v('gKey'),
+        notifyUrl: v('gNotify'),
+        sandboxMode: on('gSandbox'),
+        autoRefundOnFail: on('gAutoRefund'),
+        channels: {
+          usdt: {
+            network: v('uNetwork'),
+            address: v('uAddr'),
+            rate: Number(v('uRate')) || 0,
+            minAmount: Number(v('uMin')) || 0,
+            confirmations: Number(v('uConf')) || 1,
+            payWindowMinutes: Number(v('uWindow')) || 30,
+            uniqueAmount: on('uUnique'),
+            qrTemplate: v('uQr'),
+            tips: v('uTips'),
+          },
+          creditcard: {
+            provider: v('cProvider'),
+            currency: v('cCur') || 'USD',
+            rate: Number(v('cRate')) || 0,
+            statement: v('cStmt'),
+            publishableKey: v('cPub'),
+            secretKey: v('cSec'),
+            apiUrl: v('cApi'),
+            genericPayUrl: v('cGeneric'),
+          },
+          paypal: {
+            merchantEmail: v('ppEmail'),
+            mode: v('ppMode'),
+            currency: v('ppCur') || 'USD',
+            rate: Number(v('ppRate')) || 0,
+            ipnUrl: v('ppIpn'),
+            clientId: v('ppClient'),
+            clientSecret: v('ppSecret'),
+          },
+        },
       },
     },
   });
@@ -978,6 +1128,9 @@ async function renderSettings() {
   if (!res.ok) return;
   const s = res.settings;
   const svc = s.service || {};
+  const adm = (res.admins || [])[0] || {};
+  const i18nCfg = s.i18n || {};
+  const i18nInfo = res.i18nInfo || {};
   document.getElementById('pageBody').innerHTML = `
     <div class="chart-row" style="grid-template-columns:1.3fr 1fr;margin-top:0">
       <div class="chart-card">
@@ -1011,10 +1164,58 @@ async function renderSettings() {
         </div>
         <button class="btn btn-primary" style="margin-top:6px" onclick="saveSettings()">保存设置</button>
 
-        <div class="form-sec">修改管理员密码</div>
-        <div class="field"><label>原密码</label><input class="input" id="pwOld" type="password" placeholder="初始为 admin888"></div>
-        <div class="field"><label>新密码</label><input class="input" id="pwNew" type="password" placeholder="留空表示不修改"></div>
-        <button class="btn btn-sm" onclick="saveSettings(true)">更新密码</button>
+        <div class="form-sec">管理员账号与登录密码</div>
+        <div class="row-flex" style="padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;margin-bottom:12px">
+          <span style="width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--brand-soft);font-size:15px">🔐</span>
+          <div>
+            <div><b style="font-size:13.5px">${escapeHtml(adm.name || adm.username || 'admin')}</b>
+              <span class="chip" style="margin-left:6px">${escapeHtml(adm.username || 'admin')}</span></div>
+            <div class="muted" style="font-size:11.5px">
+              ${adm.hashed ? '口令已使用 scrypt 加盐哈希存储 ✓' : '⚠️ 口令尚未加密，请修改一次以完成升级'}
+              ${adm.passwordUpdatedAt ? ' · 上次修改 ' + fmtTime(adm.passwordUpdatedAt) : ''}
+              ${adm.lastLogin ? ' · 上次登录 ' + fmtTime(adm.lastLogin) : ''}
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="openPasswordModal()">🔑 修改登录密码</button>
+        <div class="hint" style="margin-top:10px">
+          修改成功后，<b>其他已登录的会话会被强制下线</b>（当前会话保留）；操作会记入审计日志。若忘记密码，可在服务器执行
+          <code class="mono">node tools/reset-admin.js &lt;新密码&gt;</code> 重置。
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:18px">
+      <div class="panel-head"><h3>🌐 前台多语言</h3><span class="chip">默认英语 · 可按访问者 IP 自动切换</span></div>
+      <div class="panel-body">
+        <div class="form-grid">
+          <div class="field"><label>默认语言</label>
+            <select class="select" id="i18nDefault">
+              <option value="en" ${i18nCfg.defaultLang !== 'zh' ? 'selected' : ''}>英语 English（默认）</option>
+              <option value="zh" ${i18nCfg.defaultLang === 'zh' ? 'selected' : ''}>简体中文</option>
+            </select></div>
+          <div class="field"><label>IP 归属地查询接口</label>
+            <input class="input" id="i18nApi" value="${escapeHtml(i18nCfg.ipApiUrl || 'http://ip-api.com/json/')}"></div>
+          <div class="field"><label>查询超时（毫秒）</label>
+            <input class="input" id="i18nTimeout" type="number" value="${Number(i18nCfg.timeoutMs) || 2500}"></div>
+          <div class="field"><label>结果缓存（小时）</label>
+            <input class="input" id="i18nCache" type="number" value="${Number(i18nCfg.cacheHours) || 6}"></div>
+          <div class="field full"><label class="switch ${i18nCfg.enabled !== false ? 'on' : ''}" id="i18nEnabled" onclick="this.classList.toggle('on')">
+            <span class="track"></span><span>启用前台多语言（关闭后所有访客固定使用默认语言）</span></label></div>
+          <div class="field full"><label class="switch ${i18nCfg.autoByIp !== false ? 'on' : ''}" id="i18nByIp" onclick="this.classList.toggle('on')">
+            <span class="track"></span><span>按访问者 IP 自动切换（中国 / 港澳台 → 中文，其余 → 英语）</span></label></div>
+        </div>
+        <div class="row-flex" style="margin-top:4px;flex-wrap:wrap;gap:10px">
+          <button class="btn btn-sm btn-primary" onclick="saveSettings()">保存设置</button>
+          <div class="spacer" style="flex:1"></div>
+          <input class="input" id="i18nTestIp" placeholder="输入 IP 测试，例如 114.114.114.114" style="max-width:260px">
+          <button class="btn btn-sm" onclick="testI18nIp()">测试识别</button>
+        </div>
+        <div class="hint" id="i18nTestOut">缓存状态：已缓存 ${(i18nInfo.cache || {}).size || 0} 个 IP（中文 ${
+          (i18nInfo.cache || {}).zh || 0
+        } / 英文 ${(i18nInfo.cache || {}).en || 0} / 未知 ${(i18nInfo.cache || {}).unknown || 0}，查询失败 ${
+          (i18nInfo.cache || {}).failCount || 0
+        } 次）</div>
       </div>
     </div>
 
@@ -1027,26 +1228,109 @@ async function renderSettings() {
     </div>`;
 }
 
-async function saveSettings(isPwd) {
+async function saveSettings() {
   const v = (k) => { const e = document.getElementById(k); return e ? e.value.trim() : ''; };
-  const body = { settings: {} };
-  if (!isPwd) {
-    body.settings = {
+  const on = (k) => { const e = document.getElementById(k); return !!(e && e.classList.contains('on')); };
+  const body = {
+    settings: {
       siteName: v('stName'), siteSubtitle: v('stSub'), slogan: v('stSlogan'), notice: v('stNotice'),
       service: { tg: v('stTg'), wechat: v('stWx'), qq: v('stQq'), workTime: v('stTime') },
       orderExpireMinutes: Number(v('stExpire')) || 30,
       minAmountAlert: Number(v('stMin')) || 1000,
-      autoRecharge: document.getElementById('stAuto').classList.contains('on'),
-      sandboxMode: document.getElementById('stSandbox').classList.contains('on'),
-    };
-  }
-  if (isPwd || v('pwNew')) {
-    body.admin = { username: ME.username, oldPassword: v('pwOld'), newPassword: v('pwNew'), name: ME.name };
-  }
+      autoRecharge: on('stAuto'),
+      sandboxMode: on('stSandbox'),
+      i18n: {
+        defaultLang: v('i18nDefault') || 'en',
+        enabled: on('i18nEnabled'),
+        autoByIp: on('i18nByIp'),
+        ipApiUrl: v('i18nApi') || 'http://ip-api.com/json/',
+        timeoutMs: Number(v('i18nTimeout')) || 2500,
+        cacheHours: Number(v('i18nCache')) || 6,
+      },
+    },
+  };
   const res = await api('/api/admin/settings', { method: 'POST', body });
   if (!res.ok) return toast(res.message || '保存失败', 'err');
   toast('设置已保存', 'ok');
   renderSettings();
+}
+
+/* ============================================================
+   管理员密码修改（独立弹窗：二次确认 + 强度校验 + 明确报错）
+   ============================================================ */
+function openPasswordModal() {
+  const body = `<div class="form-grid">
+    <div class="field full"><label>当前密码 <span class="req">*</span></label>
+      <input class="input" id="pwOld" type="password" autocomplete="current-password" placeholder="请输入当前登录密码"></div>
+    <div class="field full"><label>新密码 <span class="req">*</span></label>
+      <input class="input" id="pwNew" type="password" autocomplete="new-password" placeholder="至少 8 位，不含空格，不能是纯数字"></div>
+    <div class="field full"><label>确认新密码 <span class="req">*</span></label>
+      <input class="input" id="pwNew2" type="password" autocomplete="new-password" placeholder="请再输入一遍，避免打错后无法登录"></div>
+    <div class="field full"><div class="hint" id="pwMsg">建议使用「字母 + 数字 + 符号」组合，长度 8-64 位。修改成功后其他登录会话会被强制下线。</div></div>
+  </div>`;
+  const foot = `<button class="btn" onclick="closeModal()">取消</button>
+    <button class="btn btn-primary" style="margin-left:auto" id="pwSubmit" onclick="submitPassword()">确认修改</button>`;
+  openModal({
+    title: '🔑 修改管理员登录密码',
+    body,
+    foot,
+    maxWidth: 560,
+    after: () => {
+      document.getElementById('pwOld').focus();
+      ['pwOld', 'pwNew', 'pwNew2'].forEach((id) => {
+        document.getElementById(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') submitPassword(); });
+      });
+    },
+  });
+}
+
+async function submitPassword() {
+  const v = (k) => { const e = document.getElementById(k); return e ? e.value : ''; };
+  const msg = (txt, type) => {
+    const el = document.getElementById('pwMsg');
+    if (el) {
+      el.textContent = txt;
+      el.style.color = type === 'err' ? 'var(--danger)' : 'var(--text-3)';
+    }
+  };
+  const oldPw = v('pwOld');
+  const newPw = v('pwNew');
+  const newPw2 = v('pwNew2');
+
+  if (!oldPw) return msg('请填写当前密码', 'err');
+  if (!newPw) return msg('请填写新密码', 'err');
+  if (newPw.length < 8) return msg('新密码至少 8 位', 'err');
+  if (newPw.length > 64) return msg('新密码最多 64 位', 'err');
+  if (/\s/.test(newPw)) return msg('新密码不能包含空格', 'err');
+  if (/^\d+$/.test(newPw)) return msg('新密码不能是纯数字', 'err');
+  if (newPw === oldPw) return msg('新密码不能与当前密码相同', 'err');
+  if (newPw !== newPw2) return msg('两次输入的新密码不一致，请重新核对', 'err');
+
+  const btn = document.getElementById('pwSubmit');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> 提交中';
+  const res = await api('/api/admin/password', {
+    method: 'POST',
+    body: { oldPassword: oldPw, newPassword: newPw, confirmPassword: newPw2 },
+  });
+  btn.disabled = false;
+  btn.textContent = '确认修改';
+  if (!res.ok) return msg(res.message || '修改失败', 'err');
+  closeModal();
+  toast(res.message || '密码已更新', 'ok');
+  renderSettings();
+}
+
+/** 语言识别自测：输入 IP 看会判定成哪种语言 */
+async function testI18nIp() {
+  const ip = (document.getElementById('i18nTestIp').value || '').trim();
+  const out = document.getElementById('i18nTestOut');
+  out.textContent = '识别中…';
+  const res = await api('/api/admin/i18n/test' + (ip ? '?ip=' + encodeURIComponent(ip) : ''));
+  if (!res.ok) { out.textContent = res.message || '测试失败'; return; }
+  out.textContent = `IP ${res.ip} → 判定为 ${res.lang === 'zh' ? '中文' : '英语'}（依据：${res.source}${
+    res.country ? '，国家码 ' + res.country : ''
+  }）`;
 }
 
 async function resetDemo() {

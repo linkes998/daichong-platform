@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>云充站 · 会员套餐代充平台</title>
-<meta name="description" content="一站式虚拟商品会员套餐代充，无需注册、无需密码，填写充值账号即可下单，自动充值秒到账。">
+<title>YunChong · Membership Top-up Platform</title>
+<meta name="description" content="One-stop virtual goods membership top-up. No sign-up, no password, pay and get it delivered automatically.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
 <link rel="stylesheet" href="/assets/theme.css">
 <link rel="stylesheet" href="/assets/store.css">
@@ -13,8 +13,8 @@
 
 <div class="notice-bar">
   <div class="container">
-    <span class="badge">公告</span>
-    <span class="txt" id="noticeText">新用户首单立减 3 元｜请务必核对充值账号</span>
+    <span class="badge" data-i18n="notice.label">Notice</span>
+    <span class="txt" id="noticeText"></span>
   </div>
 </div>
 
@@ -22,18 +22,19 @@
   <div class="container topbar-inner">
     <a class="brand" href="/">
       <span class="brand-mark">⚡</span>
-      <span>云充站<small id="brandSub">会员代充 · 极速到账</small></span>
+      <span><span id="brandName">YunChong</span><small id="brandSub"></small></span>
     </a>
     <nav class="nav">
-      <a href="/" class="on">首页</a>
-      <a href="#products">全部商品</a>
-      <a href="/query.html">订单查询</a>
-      <a href="#faq">常见问题</a>
-      <a href="#service">联系客服</a>
+      <a href="/" class="on" data-i18n="nav.home">Home</a>
+      <a href="#products" data-i18n="nav.products">All Products</a>
+      <a href="/query.html" data-i18n="nav.query">Order Lookup</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="#service" data-i18n="nav.service">Contact</a>
     </nav>
     <div class="topbar-right">
-      <span class="chip chip-ok" id="sysStatus"><span class="dot dot-ok"></span>系统正常</span>
-      <a class="btn btn-sm btn-ghost" href="/admin.html">后台管理</a>
+      <span class="chip chip-ok" id="sysStatus"><span class="dot dot-ok"></span><span data-i18n="sys.ok">All Systems Normal</span></span>
+      <button class="btn btn-sm btn-ghost lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+      <a class="btn btn-sm btn-ghost" href="/admin.html" data-i18n="nav.admin">Admin</a>
     </div>
   </div>
 </header>
@@ -42,28 +43,28 @@
 <section class="hero">
   <div class="container hero-grid">
     <div>
-      <span class="chip chip-brand">无需注册 · 无需密码 · 一屏下单</span>
-      <h1>一站式<br><span class="grad">会员套餐代充</span></h1>
-      <p class="lead" id="slogan">选择商品 → 填写充值账号 → 支付，剩下的交给我们。自动对接上游通道，平均 1 分钟内到账。</p>
+      <span class="chip chip-brand" data-i18n="hero.badge">No sign-up · No password · One-screen checkout</span>
+      <h1><span data-i18n="hero.title1">One-stop</span><br><span class="grad" data-i18n="hero.title2">Membership Top-up</span></h1>
+      <p class="lead" id="slogan"></p>
       <div class="hero-chips">
-        <span class="chip">⚡ 自动充值</span>
-        <span class="chip">🛡️ 官方渠道</span>
-        <span class="chip">↩️ 失败退款</span>
-        <span class="chip">🕘 09:00-23:00 客服</span>
+        <span class="chip" data-i18n="hero.chip.auto">⚡ Auto Recharge</span>
+        <span class="chip" data-i18n="hero.chip.official">🛡️ Official Channel</span>
+        <span class="chip" data-i18n="hero.chip.refund">↩️ Refund on Failure</span>
+        <span class="chip" data-i18n="hero.chip.support">🕘 Support 09:00-23:00</span>
       </div>
       <div class="hero-search">
-        <input class="input" id="heroSearch" placeholder="搜索商品，例如「爱奇艺」「X Premium」「点券」">
-        <button class="btn btn-primary" onclick="doSearch()">搜索</button>
+        <input class="input" id="heroSearch" data-i18n-ph="hero.searchPh" placeholder="Search products, e.g. &quot;iQIYI&quot;, &quot;X Premium&quot;, &quot;Game Credits&quot;">
+        <button class="btn btn-primary" onclick="doSearch()" data-i18n="query.btn">Search</button>
       </div>
       <div class="hero-stats">
-        <div><div class="n" id="statOrders">—</div><div class="l">累计成交订单</div></div>
-        <div><div class="n" id="statGoods">—</div><div class="l">在售商品</div></div>
-        <div><div class="n" id="statRate">—</div><div class="l">平均到账时间</div></div>
+        <div><div class="n" id="statOrders">—</div><div class="l" data-i18n="hero.stat.orders">Orders Completed</div></div>
+        <div><div class="n" id="statGoods">—</div><div class="l" data-i18n="hero.stat.goods">Products on Sale</div></div>
+        <div><div class="n" id="statRate">—</div><div class="l" data-i18n="hero.stat.rate">Avg. Delivery Time</div></div>
       </div>
     </div>
 
     <div class="live-panel">
-      <div class="live-head"><span class="pulse"></span> 实时充值动态 · 刚刚成交</div>
+      <div class="live-head"><span class="pulse"></span> <span data-i18n="live.title">Live Recharge Feed · Just Completed</span></div>
       <div class="live-list" id="liveList">
         <div class="live-item"><div class="ico skeleton"></div><div class="txt"><div class="skeleton" style="height:12px;width:60%"></div></div></div>
         <div class="live-item"><div class="ico skeleton"></div><div class="txt"><div class="skeleton" style="height:12px;width:75%"></div></div></div>
@@ -78,8 +79,8 @@
 <section class="sec" id="hubs">
   <div class="container">
     <div class="sec-head">
-      <h2>选择你的服务专区</h2>
-      <div class="sub">独立专区 · 专属通道 · 安全下单</div>
+      <h2 data-i18n="hubs.title">Choose Your Service Zone</h2>
+      <div class="sub" data-i18n="hubs.sub">Dedicated zones · Dedicated channels · Secure checkout</div>
       <div class="right"><span class="chip" id="hubCount">—</span></div>
     </div>
     <div class="hub-grid" id="hubGrid"></div>
@@ -90,12 +91,12 @@
 <section class="sec" id="products">
   <div class="container">
     <div class="sec-head">
-      <h2>在售商品</h2>
-      <div class="sub" id="prodSub">全部专区</div>
+      <h2 data-i18n="products.title">Available Products</h2>
+      <div class="sub" id="prodSub" data-i18n="products.all">All Zones</div>
       <div class="right cat-tabs" id="catTabs"></div>
     </div>
     <div class="prod-grid" id="prodGrid"></div>
-    <div class="empty hide" id="prodEmpty"><div class="big">🔍</div><div>没有找到匹配的商品，换个关键词试试</div></div>
+    <div class="empty hide" id="prodEmpty"><div class="big">🔍</div><div data-i18n="products.empty">No matching products. Try another keyword.</div></div>
   </div>
 </section>
 
@@ -103,14 +104,14 @@
 <section class="sec" id="flow">
   <div class="container">
     <div class="sec-head">
-      <h2>30 秒完成下单</h2>
-      <div class="sub">我们把流程压到了最短 —— 选套餐、填账号、付款，没有多余步骤</div>
+      <h2 data-i18n="flow.title">Checkout in 30 Seconds</h2>
+      <div class="sub" data-i18n="flow.sub">We compressed the flow: pick a plan, enter your account, pay. Nothing else.</div>
     </div>
     <div class="flow">
-      <div class="flow-step"><div class="num">STEP 01</div><h4>选择套餐</h4><p>在商品弹窗里直接点选月卡 / 季卡 / 年卡，无需跳转页面。</p></div>
-      <div class="flow-step"><div class="num">STEP 02</div><h4>填写充值账号</h4><p>只需填写要充值的账号，不需要密码、不需要登录授权。</p></div>
-      <div class="flow-step"><div class="num">STEP 03</div><h4>完成支付</h4><p>支持支付宝 / 微信 / QQ钱包 / USDT 多种方式，扫码即付。</p></div>
-      <div class="flow-step"><div class="num">STEP 04</div><h4>自动充值</h4><p>支付后系统自动对接上游通道，订单号即可实时查询进度。</p></div>
+      <div class="flow-step"><div class="num" data-i18n="flow.s1">STEP 01</div><h4 data-i18n="flow.h1">Pick a Plan</h4><p data-i18n="flow.p1">Choose monthly / quarterly / yearly plans right inside the product dialog. No page jumps.</p></div>
+      <div class="flow-step"><div class="num" data-i18n="flow.s2">STEP 02</div><h4 data-i18n="flow.h2">Enter Account</h4><p data-i18n="flow.p2">Only the account to recharge. No password, no login authorization.</p></div>
+      <div class="flow-step"><div class="num" data-i18n="flow.s3">STEP 03</div><h4 data-i18n="flow.h3">Pay Securely</h4><p data-i18n="flow.p3">Alipay, WeChat, QQ Wallet, USDT, credit card or PayPal. Scan or redirect to pay.</p></div>
+      <div class="flow-step"><div class="num" data-i18n="flow.s4">STEP 04</div><h4 data-i18n="flow.h4">Auto Recharge</h4><p data-i18n="flow.p4">After payment the system submits to the upstream channel automatically. Track progress by order number.</p></div>
     </div>
   </div>
 </section>
@@ -119,33 +120,33 @@
 <section class="sec" id="faq">
   <div class="container">
     <div class="sec-head">
-      <h2>常见问题</h2>
-      <div class="sub">下单前先看看，能省不少沟通时间</div>
+      <h2 data-i18n="faq.title">Frequently Asked Questions</h2>
+      <div class="sub" data-i18n="faq.sub">A quick read before ordering saves a lot of back-and-forth</div>
     </div>
     <div class="faq" id="faqList">
       <div class="faq-item">
-        <div class="faq-q">需要提供账号密码吗？<span class="ar">＋</span></div>
-        <div class="faq-a"><div class="inner">不需要。全部商品走官方直充或家庭组邀请，只需填写要充值的账号（手机号 / UID / @用户名等），不需要提供任何密码或验证码。</div></div>
+        <div class="faq-q"><span data-i18n="faq.q1">Do you need my account password?</span><span class="ar">＋</span></div>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a1"></div></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">下单后多久能到账？<span class="ar">＋</span></div>
-        <div class="faq-a"><div class="inner">绝大多数订单在支付后 1-5 分钟内自动完成；海外专区（X / Telegram / YouTube）因上游为人工+BOT 混合处理，通常 10 分钟内在订单页更新状态。若超过 30 分钟仍未完成，请带着订单号联系客服。</div></div>
+        <div class="faq-q"><span data-i18n="faq.q2">How long does delivery take?</span><span class="ar">＋</span></div>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a2"></div></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">充值账号填错了怎么办？<span class="ar">＋</span></div>
-        <div class="faq-a"><div class="inner">订单提交后充值账号不可自行修改。若订单仍在「待支付」状态，可关闭订单后重新下单；若已支付，请立即联系客服，在未被上游受理前我们可尝试拦截，已受理的订单无法撤回。<br><b>所以下单前请务必核对账号，需要二次确认的商品我们已强制要求重复输入。</b></div></div>
+        <div class="faq-q"><span data-i18n="faq.q3">What if I entered the wrong account?</span><span class="ar">＋</span></div>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a3"></div></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">充值失败了会退款吗？<span class="ar">＋</span></div>
-        <div class="faq-a"><div class="inner">会。上游返回失败且未产生扣费时，系统会自动标记「充值失败」，客服核实后按原路退回（一般 1-24 小时到账）。若因账号填写错误导致上游已扣费，则无法退款，请理解。</div></div>
+        <div class="faq-q"><span data-i18n="faq.q4">Do you refund failed recharges?</span><span class="ar">＋</span></div>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a4"></div></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">怎么查询我的订单？<span class="ar">＋</span></div>
-        <div class="faq-a"><div class="inner">打开「订单查询」页面，输入订单号或充值账号即可查看实时进度与完整日志。无需注册登录。</div></div>
+        <div class="faq-q"><span data-i18n="faq.q5">How do I check my order?</span><span class="ar">＋</span></div>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a5"></div></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q">会员会掉吗？有风险吗？<span class="ar">＋</span></div>
-        <div class="faq-a"><div class="inner">我们走的是官方低价区与正规家庭组渠道，正常使用基本不会掉。仅在账号本身触发平台风控（如异地登录频繁、短期修改资料）时存在极小概率异常，届时可联系客服补开一次。</div></div>
+        <div class="faq-q"><span data-i18n="faq.q6">Will the membership drop? Any risk?</span><span class="ar">＋</span></div>
+        <div class="faq-a"><div class="inner" data-i18n-html="faq.a6"></div></div>
       </div>
     </div>
   </div>
@@ -156,39 +157,39 @@
   <div class="container">
     <div class="footer-grid">
       <div style="min-width:260px;flex:1">
-        <div class="brand" style="margin-bottom:14px"><span class="brand-mark">⚡</span><span>云充站<small>会员代充 · 极速到账</small></span></div>
-        <p style="max-width:320px;line-height:1.9">面向个人与小型商户的虚拟商品代充交易平台。所有交易均通过订单号可查，全程留痕。</p>
+        <div class="brand" style="margin-bottom:14px"><span class="brand-mark">⚡</span><span><span class="fBrandName">YunChong</span><small data-i18n="brand.sub">Membership Top-up · Instant Delivery</small></span></div>
+        <p style="max-width:320px;line-height:1.9" data-i18n="footer.desc">A virtual goods top-up platform for individuals and small merchants. Every transaction is traceable by order number.</p>
       </div>
       <div>
-        <h4>服务</h4>
+        <h4 data-i18n="footer.col.service">Service</h4>
         <ul>
-          <li><a href="#products">全部商品</a></li>
-          <li><a href="/query.html">订单查询</a></li>
-          <li><a href="#faq">常见问题</a></li>
-          <li><a href="/admin.html">后台管理</a></li>
+          <li><a href="#products" data-i18n="nav.products">All Products</a></li>
+          <li><a href="/query.html" data-i18n="nav.query">Order Lookup</a></li>
+          <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+          <li><a href="/admin.html" data-i18n="nav.admin">Admin</a></li>
         </ul>
       </div>
       <div>
-        <h4>联系客服</h4>
+        <h4 data-i18n="footer.col.support">Support</h4>
         <ul id="contactList">
-          <li>Telegram：<span id="cTg">—</span></li>
-          <li>微信：<span id="cWx">—</span></li>
-          <li>QQ：<span id="cQq">—</span></li>
-          <li>工作时间：<span id="cTime">—</span></li>
+          <li><span data-i18n="footer.tg">Telegram</span>：<span id="cTg">—</span></li>
+          <li><span data-i18n="footer.wechat">WeChat</span>：<span id="cWx">—</span></li>
+          <li><span data-i18n="footer.qq">QQ</span>：<span id="cQq">—</span></li>
+          <li><span data-i18n="footer.workTime">Hours</span>：<span id="cTime">—</span></li>
         </ul>
       </div>
       <div>
-        <h4>合规提示</h4>
+        <h4 data-i18n="footer.col.compliance">Compliance</h4>
         <ul style="max-width:250px;line-height:1.9">
-          <li>本站仅提供代充服务，非官方授权站点</li>
-          <li>请勿使用来源不明的账号下单</li>
-          <li>虚拟商品一经充值成功不支持退换</li>
+          <li data-i18n="footer.c1">We provide top-up services only; not an official authorized site</li>
+          <li data-i18n="footer.c2">Do not order with accounts of unknown origin</li>
+          <li data-i18n="footer.c3">Virtual goods are non-refundable once delivered successfully</li>
         </ul>
       </div>
     </div>
     <div style="margin-top:34px;padding-top:22px;border-top:1px solid var(--line);font-size:12.5px;display:flex;gap:16px;flex-wrap:wrap">
-      <span>© 2026 云充站 · 演示系统</span>
-      <span class="muted">本站为演示环境，支付与上游充值均为沙箱模拟，不产生真实交易</span>
+      <span data-i18n="footer.copyright">© 2026 YunChong · Demo System</span>
+      <span class="muted" data-i18n="footer.sandboxNote">Demo environment. Payment and upstream recharge are simulated; no real transactions occur.</span>
       <span style="margin-left:auto" id="footVer"></span>
     </div>
   </div>
@@ -198,6 +199,7 @@
 <div id="toast-wrap"></div>
 
 <script src="/assets/app.js"></script>
+<script src="/assets/i18n.js"></script>
 <script src="/assets/store.js"></script>
 </body>
 </html>

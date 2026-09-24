@@ -28,10 +28,18 @@ node server.js
 
 ```bash
 node test-e2e.js            # 主干链路端到端断言
+node test-features.js       # 密码重置 / 多语言 / USDT 通道 / 信用卡·PayPal 功能断言
 node test-source-import.js  # 货源导入商品（免填账号类）全链路断言
 node test-new-goods.js      # 新增货源商品（GPT 卡密 / X Premium+ / CheJiu 档位）断言
-node check-dom.js           # 前端静态一致性（DOM id / 内联函数 / CSS 类）
-node visual-check.js        # 真实浏览器渲染 14 个页面并截图到 shots/
+node check-dom.js           # 前端静态一致性（DOM id / 内联函数 / CSS 类 / 脚本语法）
+node visual-check.js        # 真实浏览器渲染 18 个页面并截图到 shots/
+```
+
+忘记后台密码时（无需旧密码，离线重置）：
+
+```bash
+node tools/reset-admin.js --list              # 查看现有管理员与口令状态
+node tools/reset-admin.js 'YourNewPass#2026'  # 重置 admin 的口令（先停服）
 ```
 
 > **当前为沙箱模式**：支付与上游充值接口都是本地模拟，不会产生真实交易。数据全部落在 `data/db.json`，删除该文件即可恢复初始种子数据。
@@ -52,9 +60,11 @@ daichong-platform/
 ├── lib/
 │   ├── db.js              # JSON 数据层（原子写入）
 │   ├── supplier.js        # 商品来源/上游 API 对接（签名、重试、沙箱）
-│   └── payment.js         # 支付网关适配
+│   ├── payment.js         # 支付网关适配（扫码 / USDT / 信用卡 / PayPal）
+│   └── i18n.js            # 访问者语言识别（IP 归属地 + Accept-Language）
 ├── tools/
 │   ├── import-source.js   # 货源清单批量导入器（upsert 分类/来源/商品）
+│   ├── reset-admin.js     # 管理员口令离线重置（忘记密码时的救援通道）
 │   ├── grab-site.js       # 货源站抓取探针（站点类型与接口线索识别）
 │   ├── grab-spa.js        # CDP 渲染抓取（捕获 XHR/fetch 响应 + 页面内执行脚本）
 │   ├── parse-next-flight.js # Next.js App Router 首屏数据（flight）解析
@@ -130,13 +140,30 @@ daichong-platform/
 - **沙箱模式**：全站开关。开启时不发起真实 HTTP 请求，走本地模拟（可设成功率/延时），便于演示；关闭后即真实对接
 
 ### 5. 支付配置
-支付宝 / 微信 / QQ钱包 / USDT / 卡密 支付方式开关、网关类型与商户参数、异步通知地址、沙箱开关。
+支付方式开关 + 国内扫码网关参数 + **各收款通道独立参数**：
 
-### 6. 系统设置
+| 通道 | 可维护参数 |
+| --- | --- |
+| 支付宝 / 微信 / QQ钱包 | 网关类型（易支付 / 当面付 / Native）、商户 ID、密钥、异步通知地址、沙箱开关 |
+| **USDT 收款** | 收款网络（TRC20 / ERC20 / BEP20 / Polygon / Solana）、收款地址、汇率（1 USDT = ? CNY）、最小收款金额、需要确认数、支付窗口、金额加唯一尾数（便于链上对账）、二维码模板、收银台提示语 |
+| **国际信用卡** | 服务商（Stripe Checkout / 通用托管页）、结算币种、汇率、账单显示名、Publishable Key、Secret Key（仅服务端）、接口地址、通用托管页模板 |
+| **PayPal** | 收款账号（邮箱）、模式（Sandbox / Live）、结算币种、汇率、IPN 通知地址、Client ID / Secret（可选） |
+
+> 安全约定：`Secret Key` / `Client Secret` / `merchantKey` **只保留在服务端**，`/api/store` 只下发地址、汇率、币种、Publishable Key 等公开信息（`payInfo`），前端拿不到任何密钥。
+
+### 6. 前台多语言
+- **默认英语**；打开后台「系统设置 → 前台多语言」可切换默认语言。
+- **按访问者 IP 自动切换**：服务端取 `X-Forwarded-For` / `X-Real-IP`，查询 IP 归属国，中国 / 港澳台 → 中文，其余 → 英语；查询失败自动回退 `Accept-Language`，仍不确定则用默认语言（不会阻塞页面）。
+- **手动切换**：前台右上角语言按钮，选择写入 `localStorage` 后**不再被 IP 识别覆盖**；也支持 `?lang=zh` / `?lang=en` 强制指定。
+- 界面文案与商品/分类/套餐文案均可翻译：内容词条以「中文原文 → 英文」的方式维护在 `public/assets/i18n.js`，命中即翻译，未命中则原样展示。
+- 后台「系统设置」提供 **IP 识别自测**（输入任意 IP 看判定结果与依据）与缓存状态展示。
+
+### 7. 系统设置
 站点名称/标语/公告、客服信息、订单支付有效期、低库存阈值、
-支付后自动派单开关、**全站沙箱开关**、管理员密码修改、演示数据重置。
+支付后自动派单开关、**全站沙箱开关**、**多语言配置（默认语言 / 是否按 IP 自动切换 / IP 接口与缓存）**、
+**修改管理员密码**（独立弹窗、二次确认、口令强度校验、改密后注销其他会话）、演示数据重置。
 
-### 7. 操作日志
+### 8. 操作日志
 登录、商品/通道变更、订单操作等关键行为留痕（保留最近 800 条）。
 
 ---
@@ -244,7 +271,8 @@ node tools/import-source.js data/source-import/xxx.json --seed  # 同时写入�
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/api/store` | 前台全量数据（设置/分类/支付方式/商品+套餐） |
+| GET | `/api/store` | 前台全量数据（设置/分类/支付方式/商品+套餐/收款公开信息 payInfo） |
+| GET | `/api/locale` | 语言识别（按访问者 IP 归属地 → zh / en，返回识别依据） |
 | GET | `/api/recent` | 首页实时成交动态（账号已脱敏） |
 | POST | `/api/orders` | 创建订单（含账号格式与二次确认校验） |
 | POST | `/api/orders/:no/pay` | 模拟支付并触发自动派单 |
@@ -260,7 +288,9 @@ node tools/import-source.js data/source-import/xxx.json --seed  # 同时写入�
 | POST | `/api/admin/products/:id/skus` | 保存套餐 |
 | GET/POST | `/api/admin/suppliers` | 商品来源通道列表 / 新增或更新 |
 | POST | `/api/admin/suppliers/:id/test` | 通道连通性测试 |
-| GET/POST | `/api/admin/settings` | 系统设置（含支付配置、管理员密码） |
+| GET/POST | `/api/admin/settings` | 系统设置（站点 / 交易参数 / 多语言 / 支付配置与各通道参数） |
+| POST | `/api/admin/password` | **修改管理员密码**（校验 + 二次确认 + 注销其他会话 + 审计日志） |
+| GET | `/api/admin/i18n/test` | 语言识别自测（`?ip=114.114.114.114`） |
 | GET | `/api/admin/logs` | 操作日志 |
 
 ---
@@ -270,12 +300,14 @@ node tools/import-source.js data/source-import/xxx.json --seed  # 同时写入�
 当前实现是**完整的业务骨架 + 沙箱模拟**，正式对外运营前建议补齐：
 
 1. **数据存储**：`data/db.json` 适合单机小流量。并发上量后请迁移到 MySQL / PostgreSQL（`lib/db.js` 的 `get()/save()` 是唯一出入口，替换成本低）
-2. **支付接入**：在 `lib/payment.js` 中把 `createPayment` 换成易支付 / 支付宝当面付 / 微信 Native 的真实下单，回调走 `POST /api/callback/pay` 并补做签名校验
-3. **上游密钥加密**：`appSecret` 目前明文存储，建议改为环境变量或 KMS 加密
-4. **后台安全**：默认口令 `admin888` 必须修改；建议加验证码、登录失败锁定、IP 白名单、操作二次确认
-5. **合规**：虚拟商品代充业务需关注平台服务协议、发票、实名与风控要求，避免代充来源不明的账号。
+2. **支付接入**：国内扫码通道把 `payConfig` 换成真实易支付 / 当面付 / 微信 Native；信用卡在「支付配置 → 国际信用卡」填入 Stripe 密钥即在服务端创建 Checkout Session；PayPal 在「支付配置 → PayPal」填收款邮箱并选 Live。**上线前必须在 `POST /api/callback/pay` 补做签名校验**（当前未验签，任何人可伪造支付成功）
+3. **上游密钥加密**：`appSecret` / `secretKey` / `clientSecret` 目前以明文存在 `data/db.json`，建议改为环境变量或 KMS 加密
+4. **后台安全**：口令已改为 scrypt 加盐哈希存储并加了「10 分钟 5 次失败锁定」，默认口令 `admin888` 仍必须修改；建议再加验证码、IP 白名单、操作二次确认
+5. **多语言**：IP 归属地查询默认走 `ip-api.com` 免费接口（HTTP，45 次/分钟）。正式运营建议换成自有 IP 库或商业接口，并在后台「系统设置 → 前台多语言」调大缓存时长
+6. **合规**：虚拟商品代充业务需关注平台服务协议、发票、实名与风控要求，避免代充来源不明的账号。
    **账号类商品（如本批 `p18`~`p26` 的邮箱账号）风险更高**：货源方自身即声明「仅为有偿租用，仅限合法邮件接收与验证，禁止诈骗 / 赌博 / 洗钱 / 非法批量注册 / 绕过平台风控」，且账号所有权仍在货源方。这类商品在多数平台的服务条款下属于高风险用途，建议保留商品说明与合规声明、限制单笔/单人购买数量、对异常订单人工复核，并自行评估是否值得上架
-6. **可靠性**：为「充值中」订单加定时对账任务（轮询上游查单接口），避免回调丢失导致订单卡住
+7. **可靠性**：为「充值中」订单加定时对账任务（轮询上游查单接口），避免回调丢失导致订单卡住
+8. **加密货币收款**：当前为「展示地址 + 买家回填 TxID」的人工核验模式；如需自动到账，需接入链上监听（TronGrid / Etherscan 等）按 `payTxId` 自动核销
 
 ---
 

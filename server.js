@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const db = require('./lib/db');
 const supplier = require('./lib/supplier');
 const payment = require('./lib/payment');
+const i18n = require('./lib/i18n');
 
 const PORT = Number(process.env.PORT || 8899);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -43,8 +44,71 @@ const MIME = {
 };
 
 const tokens = new Map(); // token -> { username, name, exp }
+const loginFails = new Map(); // `${username}|${ip}` -> { n, first } 登录失败限流
 
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+/* ------------------------------------------------------------------ */
+/* 管理员口令：scrypt 加盐哈希                                          */
+/*   · 历史数据是明文 password 字段，首次登录成功后自动升级为哈希        */
+/*   · 明文仅在迁移瞬间使用，升级后立即从数据库中删除                    */
+/* ------------------------------------------------------------------ */
+
+const PW_MIN = 8;
+const PW_MAX = 64;
+
+function makeHash(plain, salt) {
+  const s = salt || crypto.randomBytes(16).toString('hex');
+  return { salt: s, hash: crypto.scryptSync(String(plain), s, 32).toString('hex') };
+}
+
+/** 校验口令：优先哈希比对，兼容历史明文 */
+function verifyAdminPassword(admin, plain) {
+  if (!admin) return false;
+  const p = String(plain == null ? '' : plain);
+  if (admin.passwordHash && admin.passwordSalt) {
+    const { hash } = makeHash(p, admin.passwordSalt);
+    const a = Buffer.from(hash, 'hex');
+    const b = Buffer.from(String(admin.passwordHash), 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  }
+  if (typeof admin.password === 'string' && admin.password) return admin.password === p;
+  return false;
+}
+
+/** 写入口令：改为哈希存储并删除明文 */
+function setAdminPassword(admin, plain) {
+  const { salt, hash } = makeHash(plain);
+  admin.passwordSalt = salt;
+  admin.passwordHash = hash;
+  if ('password' in admin) delete admin.password;
+  admin.passwordUpdatedAt = new Date().toISOString();
+}
+
+/** 口令强度校验，返回错误信息或空字符串 */
+function validateNewPassword(pw, oldPw) {
+  const p = String(pw == null ? '' : pw);
+  if (!p) return '请填写新密码';
+  if (p.length < PW_MIN) return `新密码至少 ${PW_MIN} 位`;
+  if (p.length > PW_MAX) return `新密码最多 ${PW_MAX} 位`;
+  if (/\s/.test(p)) return '新密码不能包含空格';
+  if (oldPw && p === String(oldPw)) return '新密码不能与原密码相同';
+  if (/^\d+$/.test(p)) return '新密码不能是纯数字';
+  return '';
+}
+
+/** 使除当前 token 之外的所有会话失效 */
+function revokeOtherTokens(keepToken, username) {
+  let n = 0;
+  for (const [t, rec] of tokens) {
+    if (t === keepToken) continue;
+    if (!username || rec.username === username) {
+      tokens.delete(t);
+      n++;
+    }
+  }
+  return n;
+}
 
 function json(res, code, payload) {
   const body = JSON.stringify(payload);
@@ -233,6 +297,64 @@ function markSuccess(order, reason) {
     found.sku.stock = Math.max(0, (found.sku.stock || 0) - (order.quantity || 1));
   }
   db.addLog('order.success', `订单 ${order.no} 充值完成`, 'system');
+}
+
+/* ------------------------------------------------------------------ */
+/* 启动时同步：补齐新增收款方式与通道配置（不覆盖已有设置）             */
+/* ------------------------------------------------------------------ */
+
+function syncPayMethods() {
+  const data = db.get();
+  data.payMethods = Array.isArray(data.payMethods) ? data.payMethods : [];
+  let added = 0;
+  payment.METHOD_DEFS.forEach((def) => {
+    const cur = data.payMethods.find((m) => m.code === def.code);
+    if (!cur) {
+      data.payMethods.push(Object.assign({}, def));
+      added++;
+    } else {
+      // 只补缺失字段，保留运营已配置的开关/名称/排序
+      Object.keys(def).forEach((k) => {
+        if (cur[k] === undefined) cur[k] = def[k];
+      });
+    }
+  });
+
+  data.payConfig = data.payConfig || {};
+  data.payConfig.channels = data.payConfig.channels || {};
+  Object.keys(payment.CHANNEL_DEFAULTS).forEach((code) => {
+    data.payConfig.channels[code] = Object.assign(
+      {},
+      payment.CHANNEL_DEFAULTS[code],
+      data.payConfig.channels[code] || {}
+    );
+  });
+
+  data.settings = data.settings || {};
+  data.settings.i18n = Object.assign(
+    { enabled: true, defaultLang: 'en', autoByIp: true, ipApiUrl: 'http://ip-api.com/json/', timeoutMs: 1500, cacheHours: 6 },
+    data.settings.i18n || {}
+  );
+
+  if (added) db.addLog('system.paymethods.sync', `已补齐 ${added} 个新增收款方式`, 'system');
+  db.save();
+}
+
+/** 启动时把历史明文口令一次性升级为 scrypt 哈希，避免明文落盘 */
+function migrateAdminPasswords() {
+  const data = db.get();
+  let n = 0;
+  (data.admins || []).forEach((a) => {
+    if (typeof a.password === 'string' && a.password && !a.passwordHash) {
+      setAdminPassword(a, a.password);
+      n++;
+    }
+  });
+  if (n) {
+    db.addLog('system.password.migrate', `已将 ${n} 个管理员口令升级为 scrypt 哈希存储`, 'system');
+    db.save();
+    console.log('[init] 管理员口令已升级为哈希存储：' + n + ' 个');
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -427,20 +549,39 @@ async function handleApi(req, res, pathname, query) {
         });
       });
     const s = data.settings;
+    const i18nCfg = s.i18n || {};
     return ok(res, {
       settings: {
         siteName: s.siteName,
+        siteNameEn: s.siteNameEn || '',
         siteSubtitle: s.siteSubtitle,
+        siteSubtitleEn: s.siteSubtitleEn || '',
         slogan: s.slogan,
+        sloganEn: s.sloganEn || '',
         notice: s.notice,
+        noticeEn: s.noticeEn || '',
         service: s.service,
         orderExpireMinutes: s.orderExpireMinutes,
         sandboxMode: !!s.sandboxMode,
+        defaultLang: i18nCfg.defaultLang === 'zh' ? 'zh' : 'en',
+        i18nEnabled: i18nCfg.enabled !== false,
+        autoLangByIp: i18nCfg.autoByIp !== false,
       },
       categories: data.categories.filter((c) => c.status !== 'disabled').sort((a, b) => a.sort - b.sort),
-      payMethods: data.payMethods.filter((m) => m.enabled).sort((a, b) => a.sort - b.sort),
+      payMethods: data.payMethods
+        .filter((m) => m.enabled)
+        .sort((a, b) => a.sort - b.sort)
+        .map((m) => ({ code: m.code, name: m.name, nameEn: m.nameEn || '', icon: m.icon, kind: m.kind || '', fee: m.fee || 0 })),
+      // 收款通道的公开信息（地址 / 汇率 / 币种），绝不含任何密钥
+      payInfo: payment.publicPayInfo(),
       products,
     });
+  }
+
+  /** 语言识别：按访问者 IP 归属地 / Accept-Language 判定 */
+  if (pathname === '/api/locale' && method === 'GET') {
+    const r = await i18n.detectLang(req, query);
+    return ok(res, r);
   }
 
   /** 首页实时成交动态（脱敏） */
@@ -533,25 +674,60 @@ async function handleApi(req, res, pathname, query) {
       attempts: 0,
       logs: [{ t: new Date(now).toISOString(), msg: '订单创建成功，等待支付', level: 'info' }],
     };
-    const pay = payment.createPayment(order);
+    const pay = await payment.createPayment(order);
     order.payTradeNo = pay.tradeNo;
+    order.payKind = pay.kind || '';
+    if (pay.currency) {
+      order.payCurrency = pay.currency;
+      order.payForeignAmount = pay.amount;
+      order.payRate = pay.rate;
+    }
+    if (pay.usdt) {
+      order.payCurrency = 'USDT';
+      order.payForeignAmount = pay.usdt.amount;
+      order.payRate = pay.usdt.rate;
+      order.payNetwork = pay.usdt.network;
+    }
+    if (pay.error || pay.sandboxFallback) pushLog(order, '收款通道提示：' + pay.message, 'warn');
     data.orders.unshift(order);
     db.addLog('order.create', `新订单 ${order.no}｜${product.name} ${sku.name}｜${noAccount ? '免填账号（自动发货）' : '账号 ' + account}｜¥${order.amount}`, 'customer');
     db.save();
     return ok(res, { order: decorate(order), pay });
   }
 
-  /** 沙箱支付回调：标记已支付并自动派单 */
+  /** 确认支付：沙箱一键模拟；USDT / 加密货币可回填交易哈希 */
   if (pathname.match(/^\/api\/orders\/[^/]+\/pay$/) && method === 'POST') {
     const no = pathname.split('/')[3];
+    const body = await readBody(req);
     const data = db.get();
     const order = data.orders.find((o) => o.no === no);
     if (!order) return fail(res, '订单不存在', 404);
     if (order.status !== 'pending_payment') return ok(res, { order: decorate(order), message: '订单状态无需重复支付' });
+
+    const txid = String(body.txid || body.txId || '').trim();
+    const sandbox = payment.isSandbox();
+    const cryptoLike = order.payKind === 'crypto' || order.payCurrency === 'USDT';
+
+    // 生产模式下加密货币收款必须回填交易哈希，便于人工/链上核验
+    if (cryptoLike && !sandbox && !txid) {
+      return fail(res, '请填写链上转账的交易哈希（TxID）后再提交，以便核验到账');
+    }
+    if (txid) {
+      if (!/^[A-Za-z0-9x]{16,120}$/.test(txid)) return fail(res, '交易哈希格式不正确，请核对后重新粘贴');
+      order.payTxId = txid;
+      pushLog(order, `用户回填链上交易哈希：${txid}`, 'info');
+    }
+
     order.status = 'paid';
     order.paidAt = new Date().toISOString();
-    pushLog(order, `支付成功（${order.payMethodName}）¥${order.amount}`, 'success');
-    db.addLog('order.paid', `订单 ${order.no} 支付成功 ¥${order.amount}`, 'customer');
+    pushLog(
+      order,
+      `支付成功（${order.payMethodName}）¥${order.amount}` +
+        (order.payForeignAmount ? ` ≈ ${order.payForeignAmount} ${order.payCurrency || ''}` : '') +
+        (txid ? '｜TxID ' + txid : ''),
+      'success'
+    );
+    db.addLog('order.paid', `订单 ${order.no} 支付成功 ¥${order.amount}${txid ? '（TxID ' + txid + '）' : ''}`, 'customer');
     db.save();
     if (data.settings.autoRecharge !== false) {
       setTimeout(() => {
@@ -619,12 +795,31 @@ async function handleApi(req, res, pathname, query) {
     return ok(res, { list });
   }
 
+  /** 收银台跳转地址：跳转型收款方式（信用卡 / PayPal / 网关）按需获取 */
+  if (pathname.match(/^\/api\/orders\/[^/]+\/paylink$/) && method === 'GET') {
+    const no = pathname.split('/')[3];
+    const data = db.get();
+    const order = data.orders.find((o) => o.no === no);
+    if (!order) return fail(res, '订单不存在', 404);
+    if (order.status !== 'pending_payment') return ok(res, { payUrl: '', reason: 'not_pending' });
+    const pay = await payment.createPayment(order);
+    return ok(res, {
+      payUrl: pay.payUrl || '',
+      kind: pay.kind,
+      sandbox: !!pay.sandbox,
+      amount: pay.amount,
+      currency: pay.currency,
+      message: pay.message,
+    });
+  }
+
   if (pathname.match(/^\/api\/orders\/[^/]+$/) && method === 'GET') {
     const no = pathname.split('/')[3];
     const data = db.get();
     const order = data.orders.find((o) => o.no === no);
     if (!order) return fail(res, '订单不存在', 404);
-    return ok(res, { order: decorate(order) });
+    // 带上收款通道公开信息与沙箱开关，使独立收银台 pay.html 也能渲染 USDT / 信用卡 / PayPal
+    return ok(res, { order: decorate(order), payInfo: payment.publicPayInfo(), sandbox: payment.isSandbox() });
   }
 
   /* ------------------------ 后台 ------------------------ */
@@ -633,12 +828,36 @@ async function handleApi(req, res, pathname, query) {
     const body = await readBody(req);
     const data = db.get();
     const u = String(body.username || '').trim();
-    const p = String(body.password || '');
-    const admin = data.admins.find((a) => a.username === u && a.password === p);
-    if (!admin) {
-      db.addLog('admin.login.fail', `登录失败：${u}`, 'guest');
+    const p = String(body.password == null ? '' : body.password);
+
+    // 登录失败限流：同一账号 10 分钟内连续失败 5 次即锁定
+    const key = u + '|' + i18n.clientIp(req);
+    const rec = loginFails.get(key) || { n: 0, first: Date.now() };
+    if (Date.now() - rec.first > 10 * 60 * 1000) {
+      rec.n = 0;
+      rec.first = Date.now();
+    }
+    if (rec.n >= 5) {
+      db.addLog('admin.login.locked', `登录被锁定（连续失败 ${rec.n} 次）：${u}`, 'guest');
+      const wait = Math.ceil((10 * 60 * 1000 - (Date.now() - rec.first)) / 60000);
+      return fail(res, `登录失败次数过多，请 ${wait} 分钟后再试`, 429);
+    }
+
+    const admin = data.admins.find((a) => a.username === u);
+    if (!admin || !verifyAdminPassword(admin, p)) {
+      rec.n++;
+      loginFails.set(key, rec);
+      db.addLog('admin.login.fail', `登录失败：${u}（第 ${rec.n} 次）`, 'guest');
       return fail(res, '用户名或密码错误', 401);
     }
+
+    // 历史明文口令 → 自动升级为哈希
+    if (!admin.passwordHash && admin.password) {
+      setAdminPassword(admin, p);
+      db.addLog('admin.password.upgrade', `管理员 ${admin.username} 口令已升级为哈希存储`, 'system');
+    }
+
+    loginFails.delete(key);
     const token = crypto.randomBytes(24).toString('hex');
     tokens.set(token, { username: admin.username, name: admin.name, role: admin.role, exp: Date.now() + 8 * 3600 * 1000 });
     admin.lastLogin = new Date().toISOString();
@@ -657,6 +876,57 @@ async function handleApi(req, res, pathname, query) {
 
   if (pathname === '/api/admin/me' && method === 'GET') {
     return ok(res, { admin: { username: me.username, name: me.name, role: me.role } });
+  }
+
+  /**
+   * 修改管理员密码（独立接口）
+   * 修复点：
+   *   1. 新密码为空时不再「静默成功」，一律返回明确错误
+   *   2. 校验长度 / 空格 / 纯数字 / 与原密码相同
+   *   3. 支持二次确认，避免打错后永久锁死
+   *   4. 改密成功后注销该账号的其他会话
+   *   5. 写入专用审计日志 admin.password.change
+   *   6. 明文口令升级为 scrypt 加盐哈希
+   */
+  if (pathname === '/api/admin/password' && method === 'POST') {
+    const body = await readBody(req);
+    const data = db.get();
+    const a = data.admins.find((x) => x.username === me.username);
+    if (!a) return fail(res, '管理员账号不存在', 404);
+
+    const oldPw = String(body.oldPassword == null ? '' : body.oldPassword);
+    const newPw = String(body.newPassword == null ? '' : body.newPassword);
+    const confirmPw = body.confirmPassword == null ? '' : String(body.confirmPassword);
+
+    if (!oldPw) return fail(res, '请填写当前密码');
+    if (!verifyAdminPassword(a, oldPw)) {
+      db.addLog('admin.password.fail', `修改口令失败（当前密码不正确）：${a.username}`, a.username);
+      return fail(res, '当前密码不正确', 400);
+    }
+    const bad = validateNewPassword(newPw, oldPw);
+    if (bad) return fail(res, bad, 400);
+    if (confirmPw && confirmPw !== newPw) return fail(res, '两次输入的新密码不一致，请重新核对', 400);
+
+    setAdminPassword(a, newPw);
+    const rawToken = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+    const revoked = revokeOtherTokens(rawToken, a.username);
+    db.addLog(
+      'admin.password.change',
+      `管理员 ${a.username} 修改登录口令成功（口令已哈希存储；已注销其他 ${revoked} 个会话）`,
+      a.username
+    );
+    db.save();
+    return ok(res, {
+      message: `密码已更新${revoked ? `，已注销其他 ${revoked} 个登录会话` : ''}`,
+      revoked,
+      passwordUpdatedAt: a.passwordUpdatedAt,
+      hashed: true,
+    });
+  }
+
+  /** 口令策略查询（前端提示用） */
+  if (pathname === '/api/admin/password/policy' && method === 'GET') {
+    return ok(res, { min: PW_MIN, max: PW_MAX, rules: ['不少于 8 位', '不含空格', '不能是纯数字', '须与当前密码不同'] });
   }
 
   if (pathname === '/api/admin/overview' && method === 'GET') {
@@ -983,28 +1253,89 @@ async function handleApi(req, res, pathname, query) {
   /* ---- 设置 / 日志 / 系统 ---- */
   if (pathname === '/api/admin/settings' && method === 'GET') {
     const data = db.get();
-    return ok(res, { settings: data.settings, payMethods: data.payMethods, payConfig: data.payConfig, admins: data.admins.map((a) => ({ username: a.username, name: a.name, role: a.role, lastLogin: a.lastLogin })) });
+    return ok(res, {
+      settings: data.settings,
+      payMethods: data.payMethods,
+      payConfig: data.payConfig,
+      // 各收款通道的默认参数模板，供后台表单渲染
+      channelDefaults: payment.CHANNEL_DEFAULTS,
+      methodDefs: payment.METHOD_DEFS,
+      i18nInfo: { settings: i18n.settings(), cache: i18n.cacheStats() },
+      admins: data.admins.map((a) => ({
+        username: a.username,
+        name: a.name,
+        role: a.role,
+        lastLogin: a.lastLogin,
+        // 只回传布尔值，绝不回传口令或其哈希
+        hashed: !!(a.passwordHash && a.passwordSalt),
+        passwordUpdatedAt: a.passwordUpdatedAt || '',
+      })),
+    });
   }
 
   if (pathname === '/api/admin/settings' && method === 'POST') {
     const body = await readBody(req);
     const data = db.get();
-    if (body.settings) Object.assign(data.settings, body.settings);
-    if (Array.isArray(body.payMethods)) data.payMethods = body.payMethods;
-    if (body.payConfig) Object.assign(data.payConfig, body.payConfig);
-    if (body.admin && body.admin.username) {
-      const a = data.admins.find((x) => x.username === me.username);
-      if (a) {
-        if (body.admin.newPassword) {
-          if (body.admin.oldPassword !== a.password) return fail(res, '原密码不正确');
-          a.password = body.admin.newPassword;
-        }
-        if (body.admin.name) a.name = body.admin.name;
+
+    // 口令不再走这里：避免「传了参数却静默不生效」，明确引导到专用接口
+    if (body.admin && (body.admin.newPassword || body.admin.password)) {
+      return fail(res, '修改密码请使用「修改管理员密码」入口（POST /api/admin/password），此处不再处理口令变更', 400);
+    }
+
+    if (body.settings) {
+      const inc = body.settings;
+      const deep = ['service', 'i18n'];
+      const shallow = Object.assign({}, inc);
+      deep.forEach((k) => delete shallow[k]);
+      Object.assign(data.settings, shallow);
+      deep.forEach((k) => {
+        if (inc[k] && typeof inc[k] === 'object') data.settings[k] = Object.assign({}, data.settings[k] || {}, inc[k]);
+      });
+    }
+
+    if (Array.isArray(body.payMethods)) {
+      data.payMethods = body.payMethods.map((m) => {
+        const def = payment.METHOD_DEFS.find((d) => d.code === m.code) || {};
+        return Object.assign({}, def, m);
+      });
+    }
+
+    if (body.payConfig) {
+      const inc = Object.assign({}, body.payConfig);
+      const channels = inc.channels;
+      delete inc.channels;
+      Object.assign(data.payConfig, inc);
+      if (channels && typeof channels === 'object') {
+        data.payConfig.channels = data.payConfig.channels || {};
+        Object.keys(channels).forEach((code) => {
+          data.payConfig.channels[code] = Object.assign(
+            {},
+            payment.CHANNEL_DEFAULTS[code] || {},
+            data.payConfig.channels[code] || {},
+            channels[code] || {}
+          );
+        });
       }
     }
+
+    // 多语言配置变更后清空 IP 归属地缓存，立即生效
+    i18n.clearCache();
     db.addLog('settings.save', '更新系统设置', me.username);
     db.save();
-    return ok(res, { settings: data.settings, payMethods: data.payMethods, payConfig: data.payConfig });
+    return ok(res, {
+      settings: data.settings,
+      payMethods: data.payMethods,
+      payConfig: data.payConfig,
+      channelDefaults: payment.CHANNEL_DEFAULTS,
+    });
+  }
+
+  /** 语言识别自测：给定 IP 看会判定成哪种语言（便于运营核对） */
+  if (pathname === '/api/admin/i18n/test' && method === 'GET') {
+    const ip = String(query.get('ip') || '').trim() || i18n.clientIp(req);
+    const fake = { headers: { 'x-forwarded-for': ip }, socket: {} };
+    const r = await i18n.detectLang(fake, new URLSearchParams());
+    return ok(res, { ip: r.ip || ip, lang: r.lang, country: r.country, source: r.source, cache: i18n.cacheStats() });
   }
 
   if (pathname === '/api/admin/logs' && method === 'GET') {
@@ -1050,6 +1381,8 @@ const server = http.createServer(async (req, res) => {
 });
 
 db.load();
+syncPayMethods();
+migrateAdminPasswords();
 genDemoOrders();
 
 server.listen(PORT, HOST, () => {

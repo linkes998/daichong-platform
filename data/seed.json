@@ -15,48 +15,90 @@
     "autoRecharge": true,
     "sandboxMode": true,
     "minAmountAlert": 1000,
-    "queryNeedAccount": false
+    "queryNeedAccount": false,
+    "siteNameEn": "YunChong",
+    "siteSubtitleEn": "Membership Top-up · Instant Delivery",
+    "sloganEn": "Pick a product → enter your account → pay. We handle the rest. Upstream channels are integrated; average delivery within 1 minute.",
+    "noticeEn": "New users get ¥3 off the first order｜Always double-check the account before ordering — it cannot be changed afterwards｜Support hours 09:00-23:00｜Mailbox products are for receiving mail only; please use them legally.",
+    "i18n": {
+      "enabled": true,
+      "defaultLang": "en",
+      "autoByIp": true,
+      "ipApiUrl": "http://ip-api.com/json/",
+      "timeoutMs": 2500,
+      "cacheHours": 6
+    }
   },
   "payMethods": [
     {
       "code": "alipay",
       "name": "支付宝",
+      "nameEn": "Alipay",
       "icon": "🅰️",
       "enabled": true,
       "sort": 1,
-      "fee": 0
+      "fee": 0,
+      "kind": "qr"
     },
     {
       "code": "wechat",
       "name": "微信支付",
+      "nameEn": "WeChat Pay",
       "icon": "💚",
       "enabled": true,
       "sort": 2,
-      "fee": 0
+      "fee": 0,
+      "kind": "qr"
     },
     {
       "code": "qqpay",
       "name": "QQ钱包",
+      "nameEn": "QQ Wallet",
       "icon": "🐧",
       "enabled": true,
       "sort": 3,
-      "fee": 0
+      "fee": 0,
+      "kind": "qr"
     },
     {
       "code": "usdt",
-      "name": "USDT (TRC20)",
+      "name": "USDT（加密货币）",
+      "nameEn": "USDT (Crypto)",
       "icon": "🪙",
       "enabled": true,
       "sort": 4,
-      "fee": 0
+      "fee": 0,
+      "kind": "crypto"
+    },
+    {
+      "code": "creditcard",
+      "name": "国际信用卡",
+      "nameEn": "Credit / Debit Card",
+      "icon": "💳",
+      "enabled": true,
+      "sort": 5,
+      "fee": 0,
+      "kind": "redirect"
+    },
+    {
+      "code": "paypal",
+      "name": "PayPal",
+      "nameEn": "PayPal",
+      "icon": "🅿️",
+      "enabled": true,
+      "sort": 6,
+      "fee": 0,
+      "kind": "redirect"
     },
     {
       "code": "card",
       "name": "卡密支付",
+      "nameEn": "Redeem Code",
       "icon": "🎫",
       "enabled": false,
-      "sort": 5,
-      "fee": 0
+      "sort": 7,
+      "fee": 0,
+      "kind": "none"
     }
   ],
   "payConfig": {
@@ -67,7 +109,43 @@
     "notifyUrl": "http://localhost:8899/api/callback/pay",
     "sandboxMode": true,
     "autoRefundOnFail": false,
-    "failRefundRate": 100
+    "failRefundRate": 100,
+    "channels": {
+      "usdt": {
+        "network": "TRC20",
+        "address": "TQ5NMqJjvvLhWvGPKHmVBTvkRnJfGHgVfz",
+        "rate": 7.15,
+        "rateApiUrl": "",
+        "autoRate": false,
+        "minAmount": 10,
+        "confirmations": 1,
+        "uniqueAmount": true,
+        "payWindowMinutes": 30,
+        "qrTemplate": "",
+        "tips": "请务必使用所选网络（TRC20）转账，跨链转账将导致资金丢失；转账备注请填写订单号。"
+      },
+      "creditcard": {
+        "provider": "stripe",
+        "publishableKey": "",
+        "secretKey": "",
+        "webhookSecret": "",
+        "currency": "USD",
+        "rate": 7.2,
+        "apiUrl": "https://api.stripe.com/v1/checkout/sessions",
+        "genericPayUrl": "",
+        "statement": "YUNCHONG"
+      },
+      "paypal": {
+        "merchantEmail": "",
+        "clientId": "",
+        "clientSecret": "",
+        "mode": "sandbox",
+        "currency": "USD",
+        "rate": 7.2,
+        "ipnUrl": "",
+        "brandName": "YunChong"
+      }
+    }
   },
   "categories": [
     {
@@ -1938,7 +2016,7 @@
   ],
   "meta": {
     "createdAt": "",
-    "version": "1.0.0",
-    "updatedAt": "2026-09-21T04:09:23.010Z"
+    "version": "1.2.0",
+    "updatedAt": "2026-09-24T05:26:56.818Z"
   }
 }

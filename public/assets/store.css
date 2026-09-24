@@ -224,6 +224,18 @@
 .q-order .top .nm { font-weight: 620; font-size: 15px; }
 .q-order .top .st { margin-left: auto; }
 
+/* ---------------- 语言切换按钮 ---------------- */
+.lang-btn { min-width: 56px; font-weight: 600; letter-spacing: 0.2px; }
+
+/* ---------------- USDT / 加密货币收款信息 ---------------- */
+.usdt-fields {
+  display: grid; gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+}
+.usdt-fields .uf { display: flex; align-items: flex-start; gap: 14px; padding: 11px 14px; background: var(--surface-2); }
+.usdt-fields .uf .k { flex: none; width: 96px; color: var(--text-3); font-size: 12.5px; padding-top: 2px; }
+.usdt-fields .uf .v { flex: 1; min-width: 0; font-size: 13.5px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
 /* ---------------- 响应式 ---------------- */
 @media (max-width: 1080px) {
   .hero-grid { grid-template-columns: 1fr; gap: 34px; }

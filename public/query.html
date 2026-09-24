@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>订单查询 · 云充站</title>
+<title>Order Lookup · YunChong</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔎</text></svg>">
 <link rel="stylesheet" href="/assets/theme.css">
 <link rel="stylesheet" href="/assets/store.css">
@@ -12,15 +12,16 @@
 
 <header class="topbar">
   <div class="container topbar-inner">
-    <a class="brand" href="/"><span class="brand-mark">⚡</span><span>云充站<small>会员代充 · 极速到账</small></span></a>
+    <a class="brand" href="/"><span class="brand-mark">⚡</span><span><span id="brandName">YunChong</span><small id="brandSub"></small></span></a>
     <nav class="nav">
-      <a href="/">首页</a>
-      <a href="/#products">全部商品</a>
-      <a href="/query.html" class="on">订单查询</a>
-      <a href="/#faq">常见问题</a>
+      <a href="/" data-i18n="nav.home">Home</a>
+      <a href="/#products" data-i18n="nav.products">All Products</a>
+      <a href="/query.html" class="on" data-i18n="nav.query">Order Lookup</a>
+      <a href="/#faq" data-i18n="nav.faq">FAQ</a>
     </nav>
     <div class="topbar-right">
-      <a class="btn btn-sm btn-ghost" href="/admin.html">后台管理</a>
+      <button class="btn btn-sm btn-ghost lang-btn" id="langBtn" onclick="toggleLang()">中文</button>
+      <a class="btn btn-sm btn-ghost" href="/admin.html" data-i18n="nav.admin">Admin</a>
     </div>
   </div>
 </header>
@@ -29,16 +30,16 @@
   <div class="container">
     <div class="query-box">
       <div style="text-align:center;margin-bottom:28px">
-        <h2 style="font-size:29px;font-weight:750;letter-spacing:-.6px">订单查询</h2>
-        <p class="muted" style="margin-top:8px;font-size:13.5px">输入订单号或下单时填写的充值账号，即可查看实时充值进度与完整日志</p>
+        <h2 style="font-size:29px;font-weight:750;letter-spacing:-.6px" data-i18n="query.title">Order Lookup</h2>
+        <p class="muted" style="margin-top:8px;font-size:13.5px" data-i18n="query.sub">Enter your order number or the account you submitted to see live progress and full logs</p>
       </div>
 
       <div class="card">
         <div style="display:flex;gap:10px">
-          <input class="input" id="kw" placeholder="订单号（DC开头） / 充值账号" autocomplete="off">
-          <button class="btn btn-primary" id="searchBtn" style="flex:none;padding:11px 26px">查询</button>
+          <input class="input" id="kw" data-i18n-ph="query.ph" placeholder="Order number (starts with DC) / account" autocomplete="off">
+          <button class="btn btn-primary" id="searchBtn" style="flex:none;padding:11px 26px" data-i18n="query.btn">Search</button>
         </div>
-        <div class="hint">订单号在下单支付页与订单结果页均可复制；未注册用户也可查询，无需登录。</div>
+        <div class="hint" data-i18n="query.hint">The order number can be copied from the checkout and result pages. No registration or login required.</div>
       </div>
 
       <div id="resultHost" class="query-result"></div>
@@ -48,13 +49,14 @@
 
 <footer class="footer">
   <div class="container" style="font-size:12.5px;display:flex;gap:16px;flex-wrap:wrap">
-    <span>© 2026 云充站 · 演示系统</span>
-    <span class="muted">支付与上游充值均为沙箱模拟，不产生真实交易</span>
+    <span data-i18n="footer.copyright">© 2026 YunChong · Demo System</span>
+    <span class="muted" data-i18n="footer.sandboxNote">Demo environment. Payment and upstream recharge are simulated; no real transactions occur.</span>
   </div>
 </footer>
 
 <div id="toast-wrap"></div>
 <script src="/assets/app.js"></script>
+<script src="/assets/i18n.js"></script>
 <script src="/assets/query.js"></script>
 </body>
 </html>

@@ -38,6 +38,7 @@ const SHOTS = [
   { name: '07-商品与套餐', url: '/admin.html#products', login: true, actions: [{ wait: 1400 }] },
   { name: '08-商品来源API', url: '/admin.html#suppliers', login: true, actions: [{ wait: 1500 }] },
   { name: '09-系统设置', url: '/admin.html#settings', login: true, actions: [{ wait: 1300 }] },
+  { name: '17-支付配置（含USDT通道）', url: '/admin.html#pay', login: true, actions: [{ wait: 1500 }] },
 ];
 
 const get = (u) => new Promise((res, rej) => http.get(u, (r) => { let d = ''; r.on('data', (c) => (d += c)); r.on('end', () => res(d)); }).on('error', rej));

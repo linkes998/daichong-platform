@@ -501,13 +501,18 @@ function orderNoRow(o) {
 function cryptoCashier(o, pay) {
   const u = pay.usdt || {};
   const cfg = (STORE.payInfo || {}).usdt || {};
-  const address = u.address || cfg.address || '';
+  // 收款地址优先级：本次下单网关分配的地址 > 订单上记录的地址 > 通道固定地址
+  const address = u.address || o.payAddress || cfg.address || '';
   const amount = u.amount || o.payForeignAmount || 0;
   const network = u.network || cfg.network || 'TRC20';
   const rate = u.rate || cfg.rate || 0;
   const memo = o.no;
   const tooSmall = !!u.tooSmall;
-  const canPay = !!address && !tooSmall;
+  // BEpusdt 网关模式：逐单地址 + 收银台链接 + 链上自动确认（无需买家回填 TxID）
+  const gatewayUrl = pay.payUrl || o.payUrl || '';
+  const isGateway = (pay.gateway || o.payGateway) === 'bepusdt';
+  const showGateway = !pay.sandbox && isGateway && !!gatewayUrl;
+  const canPay = (!!address || showGateway) && !tooSmall;
 
   const qr = (() => {
     const tpl = cfg.qrTemplate || '';
@@ -532,7 +537,7 @@ function cryptoCashier(o, pay) {
 
       <div style="max-width:460px;margin:22px auto 0;text-align:left">
         ${
-          !address
+          !address && !showGateway
             ? `<div class="card card-tight" style="background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.3);margin-bottom:16px">
                 <div style="font-size:12.5px;color:#ff8598;line-height:1.7">${escapeHtml(t('usdt.unconfigured'))}</div></div>`
             : ''
@@ -569,11 +574,15 @@ function cryptoCashier(o, pay) {
         <div class="hint" style="margin-top:10px">${escapeHtml(t('usdt.memoHint', memo))}</div>
         ${u.tips || cfg.tips ? `<div class="hint hint-warn" style="margin-top:6px">⚠️ ${escapeHtml(t(u.tips || cfg.tips))}</div>` : ''}
 
-        <div class="field" style="margin-top:18px">
+        ${
+          showGateway
+            ? ''
+            : `<div class="field" style="margin-top:18px">
           <label>${escapeHtml(t('usdt.txid'))}<span class="req">*</span></label>
           <input class="input" id="txidInput" placeholder="${escapeHtml(t('usdt.txidPh'))}" autocomplete="off">
           <div class="hint">${escapeHtml(t('usdt.txidHint'))}</div>
-        </div>
+        </div>`
+        }
 
         ${
           pay.sandbox
@@ -581,7 +590,15 @@ function cryptoCashier(o, pay) {
                 <div style="font-size:12.5px;color:#fbc65e;line-height:1.7">${escapeHtml(t('cashier.sandboxText'))}</div></div>`
             : ''
         }
-        <button class="btn btn-primary btn-block btn-lg" id="mockPay">${escapeHtml(pay.sandbox ? t('cashier.mockPay') : t('usdt.submit'))}</button>
+        ${
+          showGateway
+            ? `<div class="card card-tight" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.28);margin-bottom:14px">
+                 <div style="font-size:12.5px;color:#7ee7f7;line-height:1.7">${escapeHtml(t('gateway.confirmNote'))}</div>
+               </div>
+               <a class="btn btn-primary btn-block btn-lg" href="${escapeHtml(gatewayUrl)}" target="_blank" rel="noopener">${escapeHtml(t('gateway.goPay'))} →</a>
+               <div class="hint" style="text-align:center;margin-top:10px">${escapeHtml(t('gateway.autoNote'))}</div>`
+            : `<button class="btn btn-primary btn-block btn-lg" id="mockPay">${escapeHtml(pay.sandbox ? t('cashier.mockPay') : t('usdt.submit'))}</button>`
+        }
       </div>
     </div>
   </div>`;

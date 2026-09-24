@@ -112,6 +112,7 @@
     "failRefundRate": 100,
     "channels": {
       "usdt": {
+        "provider": "manual",
         "network": "TRC20",
         "address": "TQ5NMqJjvvLhWvGPKHmVBTvkRnJfGHgVfz",
         "rate": 7.15,
@@ -122,7 +123,17 @@
         "uniqueAmount": true,
         "payWindowMinutes": 30,
         "qrTemplate": "",
-        "tips": "请务必使用所选网络（TRC20）转账，跨链转账将导致资金丢失；转账备注请填写订单号。"
+        "tips": "请务必使用所选网络（TRC20）转账，跨链转账将导致资金丢失；转账备注请填写订单号。",
+        "gatewayUrl": "http://127.0.0.1:8080",
+        "apiToken": "",
+        "tradeType": "usdt.trc20",
+        "fiat": "CNY",
+        "useCashier": false,
+        "currencies": "",
+        "notifyUrl": "",
+        "redirectUrl": "",
+        "timeoutSec": 600,
+        "notifyAck": "ok"
       },
       "creditcard": {
         "provider": "stripe",
@@ -2016,7 +2027,7 @@
   ],
   "meta": {
     "createdAt": "",
-    "version": "1.2.0",
-    "updatedAt": "2026-09-24T05:26:56.818Z"
+    "version": "1.3.0",
+    "updatedAt": "2026-09-24T09:57:46.765Z"
   }
 }

@@ -687,7 +687,15 @@ async function handleApi(req, res, pathname, query) {
       order.payForeignAmount = pay.usdt.amount;
       order.payRate = pay.usdt.rate;
       order.payNetwork = pay.usdt.network;
+      order.payAddress = pay.usdt.address || '';
+      // 网关模式下有效期以网关返回值为准，避免两边倒计时不一致
+      if (pay.usdt.expireSec) order.expireAt = new Date(now + Number(pay.usdt.expireSec) * 1000).toISOString();
     }
+    if (pay.gateway) {
+      order.payGateway = pay.gateway;
+      order.payGatewayTradeId = pay.gatewayTradeId || '';
+    }
+    if (pay.payUrl) order.payUrl = pay.payUrl;
     if (pay.error || pay.sandboxFallback) pushLog(order, '收款通道提示：' + pay.message, 'warn');
     data.orders.unshift(order);
     db.addLog('order.create', `新订单 ${order.no}｜${product.name} ${sku.name}｜${noAccount ? '免填账号（自动发货）' : '账号 ' + account}｜¥${order.amount}`, 'customer');
@@ -779,6 +787,100 @@ async function handleApi(req, res, pathname, query) {
       }, 300);
     }
     return res.writeHead(200, { 'Content-Type': 'text/plain' }).end('SUCCESS');
+  }
+
+  /**
+   * BEpusdt 数字货币网关异步回调
+   * ------------------------------------------------------------------
+   * 验签：与网关下单同一套规则 —— 非空参数按 key 字典序拼 k=v&k=v，末尾直接追加
+   *       apiToken，MD5 取小写。验签不通过一律拒绝，避免伪造到账。
+   * status：1=等待支付（每分钟推送）2=支付成功 3=支付超时
+   * 幂等：重复回调只确认不重复派单；已进入终态的订单不回溯改状态。
+   * 应答：默认纯文本 ok（官方两份文档分别写了 ok / success，可在通道配置 notifyAck 调整）。
+   */
+  if (pathname === '/api/callback/bepusdt' && method === 'POST') {
+    const body = await readBody(req);
+    const cfg = Object.assign({}, payment.CHANNEL_DEFAULTS.usdt, payment.getChannel('usdt') || {});
+    const ack = (text) => res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' }).end(text);
+
+    if (!String(cfg.apiToken || '').trim()) {
+      db.addLog('pay.callback.invalid', 'BEpusdt 回调被拒：通道未配置 apiToken', 'system');
+      return ack('CONFIG_ERROR');
+    }
+    if (!payment.bepusdtVerify(body, cfg.apiToken)) {
+      db.addLog('pay.callback.invalid', `BEpusdt 回调验签失败：${JSON.stringify(body).slice(0, 240)}`, 'system');
+      return ack('SIGN_ERROR');
+    }
+
+    const orderNo = String(body.order_id || body.out_trade_no || '');
+    const data = db.get();
+    const order = data.orders.find((o) => o.no === orderNo);
+    if (!order) return ack('ORDER_NOT_FOUND');
+
+    const st = Number(body.status);
+    const actual = body.actual_amount !== undefined && body.actual_amount !== '' ? Number(body.actual_amount) : 0;
+    const txid = String(body.block_transaction_id || '').trim();
+    const maybeAddr = String(body.token || '').trim();
+
+    // 回写链上信息（地址形态才记为收款地址，避免把币种名写进去）
+    order.payGateway = 'bepusdt';
+    if (body.trade_id) order.payGatewayTradeId = String(body.trade_id);
+    if (txid) order.payTxId = txid;
+    if (actual) order.payForeignAmount = actual;
+    if (/^[A-Za-z0-9]{20,}$/.test(maybeAddr)) order.payAddress = maybeAddr;
+
+    /* ---- 支付成功 ---- */
+    if (st === 2) {
+      // 幂等：只要订单已越过「待支付」，本次就是重复或迟到的成功通知，一律不再重复处理
+      if (order.status !== 'pending_payment') {
+        const settled = ['paid', 'recharging', 'success'].includes(order.status);
+        pushLog(
+          order,
+          settled
+            ? `收到网关重复回调（status=2），订单已处于「${STATUS_TEXT[order.status]}」，跳过重复处理`
+            : `收到到账回调，但订单已处于「${STATUS_TEXT[order.status]}」，未变更状态`,
+          settled ? 'info' : 'warn'
+        );
+        db.save();
+        return ack(cfg.notifyAck || 'ok');
+      }
+      order.status = 'paid';
+      order.paidAt = order.paidAt || new Date().toISOString();
+      pushLog(
+        order,
+        `数字货币网关确认到账${actual ? '：' + actual + ' ' + (order.payCurrency || 'USDT') : ''}${txid ? '｜TxID ' + txid : ''}`,
+        'success'
+      );
+      db.save();
+      db.addLog('order.paid', `订单 ${order.no} 数字货币到账${txid ? '（TxID ' + txid + '）' : ''}`, 'system');
+      if (data.settings.autoRecharge !== false) {
+        setTimeout(() => {
+          const o = db.get().orders.find((x) => x.no === order.no);
+          if (o && o.status === 'paid') dispatch(o).catch((e) => console.error(e));
+        }, 300);
+      }
+      return ack(cfg.notifyAck || 'ok');
+    }
+
+    /* ---- 支付超时 ---- */
+    if (st === 3) {
+      if (order.status === 'pending_payment') {
+        order.status = 'closed';
+        order.closedAt = new Date().toISOString();
+        pushLog(order, '数字货币网关通知：支付超时，订单已关闭', 'warn');
+        db.addLog('order.close', `订单 ${order.no} 数字货币支付超时，自动关闭`, 'system');
+        db.save();
+      }
+      return ack('ok');
+    }
+
+    /* ---- 等待支付（每分钟推送）：首次记录一条日志，其余仅确认 ---- */
+    if (order.status === 'pending_payment' && !order.payGatewayNotifiedAt) {
+      order.payGatewayNotifiedAt = new Date().toISOString();
+      pushLog(order, '数字货币网关已接单，等待链上付款', 'info');
+      db.save();
+    }
+    return ack('ok');
   }
 
   /** 订单查询：订单号 / 充值账号 */
@@ -1336,6 +1438,20 @@ async function handleApi(req, res, pathname, query) {
     const fake = { headers: { 'x-forwarded-for': ip }, socket: {} };
     const r = await i18n.detectLang(fake, new URLSearchParams());
     return ok(res, { ip: r.ip || ip, lang: r.lang, country: r.country, source: r.source, cache: i18n.cacheStats() });
+  }
+
+  /**
+   * BEpusdt 网关连通性自测
+   * 真实创建一笔 0.01 法币的最小订单并立即取消，用于验证「网关地址 + 对接令牌 + 签名」是否被接受，
+   * 同时可核对签名原串，便于与网关侧排查不一致。
+   */
+  if (pathname === '/api/admin/pay/bepusdt/test' && method === 'POST') {
+    const body = await readBody(req);
+    const saved = Object.assign({}, payment.CHANNEL_DEFAULTS.usdt, payment.getChannel('usdt') || {});
+    const cfg = Object.assign({}, saved, body.channel || {});
+    const r = await payment.testBepusdt(cfg);
+    db.addLog('pay.bepusdt.test', `BEpusdt 网关自测：${r.message}`, me.username);
+    return ok(res, { result: r });
   }
 
   if (pathname === '/api/admin/logs' && method === 'GET') {

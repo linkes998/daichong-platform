@@ -97,10 +97,14 @@ function renderCrypto() {
   const host = document.getElementById('host');
   const o = ORDER;
   const cfg = PAYINFO.usdt || {};
-  const address = cfg.address || '';
+  // 收款地址：订单上记录的（BEpusdt 网关逐单分配）> 通道固定地址
+  const address = o.payAddress || cfg.address || '';
   const network = o.payNetwork || cfg.network || 'TRC20';
   const amount = o.payForeignAmount || 0;
   const tooSmall = cfg.minAmount && amount < cfg.minAmount;
+  // 网关模式：由 BEpusdt 收银台完成付款与链上确认，无需买家回填 TxID
+  const gatewayUrl = o.payUrl || '';
+  const showGateway = !SANDBOX && o.payGateway === 'bepusdt' && !!gatewayUrl;
   const qr = (() => {
     const tpl = cfg.qrTemplate || '';
     if (tpl && address) {
@@ -123,7 +127,7 @@ function renderCrypto() {
       <div class="countdown">⏳ ${escapeHtml(t('cashier.expire'))} <b id="cd">--:--</b></div>
       <div style="max-width:480px;margin:24px auto 0;text-align:left">
         ${
-          !address
+          !address && !showGateway
             ? `<div class="card card-tight" style="background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.3);margin-bottom:16px">
                 <div style="font-size:12.5px;color:#ff8598;line-height:1.7">${escapeHtml(t('usdt.unconfigured'))}</div></div>`
             : ''
@@ -144,21 +148,34 @@ function renderCrypto() {
         <div class="hint" style="margin-top:10px">${escapeHtml(t('usdt.memoHint', o.no))}</div>
         ${cfg.tips ? `<div class="hint hint-warn" style="margin-top:6px">⚠️ ${escapeHtml(t(cfg.tips))}</div>` : ''}
 
-        <div class="field" style="margin-top:18px">
+        ${
+          showGateway
+            ? ''
+            : `<div class="field" style="margin-top:18px">
           <label>${escapeHtml(t('usdt.txid'))}<span class="req">*</span></label>
           <input class="input" id="txidInput" placeholder="${escapeHtml(t('usdt.txidPh'))}" autocomplete="off">
           <div class="hint">${escapeHtml(t('usdt.txidHint'))}</div>
-        </div>
+        </div>`
+        }
         ${SANDBOX ? `<div class="card card-tight" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.28);margin-bottom:14px">
           <div style="font-size:12.5px;color:#fbc65e;line-height:1.7">${escapeHtml(t('cashier.sandboxText'))}</div></div>` : ''}
-        <button class="btn btn-primary btn-block btn-lg" id="mockPay">${escapeHtml(SANDBOX ? t('cashier.mockPay') : t('usdt.submit'))}</button>
+        ${
+          showGateway
+            ? `<div class="card card-tight" style="background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.28);margin-bottom:14px">
+                 <div style="font-size:12.5px;color:#7ee7f7;line-height:1.7">${escapeHtml(t('gateway.confirmNote'))}</div>
+               </div>
+               <a class="btn btn-primary btn-block btn-lg" href="${escapeHtml(gatewayUrl)}">${escapeHtml(t('gateway.goPay'))} →</a>
+               <div class="hint" style="text-align:center;margin-top:10px">${escapeHtml(t('gateway.autoNote'))}</div>`
+            : `<button class="btn btn-primary btn-block btn-lg" id="mockPay">${escapeHtml(SANDBOX ? t('cashier.mockPay') : t('usdt.submit'))}</button>`
+        }
         <div style="display:flex;gap:10px;margin-top:14px">
           <a class="btn btn-block" href="/">${escapeHtml(t('pay.home'))}</a>
           <a class="btn btn-block" href="/query.html?kw=${encodeURIComponent(o.no)}">${escapeHtml(t('pay.query'))}</a>
         </div>
       </div>
     </div></div>`;
-  document.getElementById('mockPay').addEventListener('click', doPay);
+  const mp = document.getElementById('mockPay');
+  if (mp) mp.addEventListener('click', doPay);
   countdown();
 }
 

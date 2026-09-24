@@ -29,10 +29,11 @@ node server.js
 ```bash
 node test-e2e.js            # 主干链路端到端断言
 node test-features.js       # 密码重置 / 多语言 / USDT 通道 / 信用卡·PayPal 功能断言
+node test-bepusdt.js        # BEpusdt 网关接入（签名金标准 / 下单·回调全链路 / 验签与幂等）
 node test-source-import.js  # 货源导入商品（免填账号类）全链路断言
 node test-new-goods.js      # 新增货源商品（GPT 卡密 / X Premium+ / CheJiu 档位）断言
 node check-dom.js           # 前端静态一致性（DOM id / 内联函数 / CSS 类 / 脚本语法）
-node visual-check.js        # 真实浏览器渲染 18 个页面并截图到 shots/
+node visual-check.js        # 真实浏览器渲染 21 个页面并截图到 shots/
 ```
 
 忘记后台密码时（无需旧密码，离线重置）：
@@ -145,11 +146,54 @@ daichong-platform/
 | 通道 | 可维护参数 |
 | --- | --- |
 | 支付宝 / 微信 / QQ钱包 | 网关类型（易支付 / 当面付 / Native）、商户 ID、密钥、异步通知地址、沙箱开关 |
-| **USDT 收款** | 收款网络（TRC20 / ERC20 / BEP20 / Polygon / Solana）、收款地址、汇率（1 USDT = ? CNY）、最小收款金额、需要确认数、支付窗口、金额加唯一尾数（便于链上对账）、二维码模板、收银台提示语 |
+| **USDT 收款** | **收款模式（手动地址 / BEpusdt 网关）**、收款网络（TRC20 / ERC20 / BEP20 / Polygon / Solana）、收款地址、汇率（1 USDT = ? CNY）、最小收款金额、需要确认数、支付窗口、金额加唯一尾数（便于链上对账）、二维码模板、收银台提示语；选网关模式时另可维护 BEpusdt 网关地址、对接令牌、交易类型、法币、超时、回调地址等（见 5.1） |
 | **国际信用卡** | 服务商（Stripe Checkout / 通用托管页）、结算币种、汇率、账单显示名、Publishable Key、Secret Key（仅服务端）、接口地址、通用托管页模板 |
 | **PayPal** | 收款账号（邮箱）、模式（Sandbox / Live）、结算币种、汇率、IPN 通知地址、Client ID / Secret（可选） |
 
 > 安全约定：`Secret Key` / `Client Secret` / `merchantKey` **只保留在服务端**，`/api/store` 只下发地址、汇率、币种、Publishable Key 等公开信息（`payInfo`），前端拿不到任何密钥。
+
+### 5.1 数字货币收款：接入 [BEpusdt](https://github.com/v03413/BEpusdt) 网关（可选）
+
+默认的 USDT 收款是「固定地址 + 买家回填 TxID + 人工核验」。若希望**逐单收款地址 + 链上自动确认 + 订单自动完成**，把 USDT 通道的「收款模式」切换为 **BEpusdt 网关** 即可，其余支付方式不受影响。
+
+| 对比项 | 手动地址模式（默认） | BEpusdt 网关模式 |
+| --- | --- | --- |
+| 收款地址 | 全站一个固定地址 | 网关**逐单分配**独立地址，天然便于对账 |
+| 金额匹配 | 靠唯一尾数人工核对 | 网关按金额 + 地址自动匹配 |
+| 到账确认 | 买家回填 TxID，人工核验 | 网关扫描链上确认后**回调自动完成订单** |
+| 订单状态 | `paid` 后需人工推进 | 回调 `status=2` 自动置为已支付并触发派单 |
+| 超时处理 | 无 | 回调 `status=3` 自动关闭订单 |
+| 部署成本 | 零依赖 | 需自建 BEpusdt（Docker 一行启动，默认 8080 端口） |
+
+**接入步骤**
+
+```bash
+# 1) 部署网关（与平台同机即可，走 127.0.0.1 内网）
+docker run -d --restart=unless-stopped -p 8080:8080 v03413/bepusdt:latest
+# 2) 打开 http://服务器IP:8080 完成初始化，在
+#    「系统管理 → 基本设置 → API 设置 → 对接令牌」复制令牌
+# 3) 平台后台「支付配置 → USDT 收款通道设置」：
+#    收款模式 = BEpusdt 网关；填 网关地址 + 对接令牌；选 交易类型（如 usdt.trc20）
+# 4) 点「🔌 测试网关连通性」——会真实创建一笔 1 法币的最小订单并立即取消，
+#    用于验证地址 / 令牌 / 签名，并返回签名原串供核对
+# 5) 关闭「沙箱模式」后生效（沙箱开启时仍走本地模拟）
+```
+
+**协议要点（实现依据）**
+
+| 项 | 说明 |
+| --- | --- |
+| 下单 | `POST {gatewayUrl}/api/v1/order/create-transaction`，返回 `trade_id`、`token`（逐单收款地址）、`actual_amount`（加密货币应付）、`payment_url`（网关收银台） |
+| 收银台模式 | 通道开关「使用网关收银台」改走 `create-order`，由买家在网关页面自选币种 / 网络 |
+| 签名 | 非空参数按 key **ASCII 字典序**拼 `k=v&k=v`，末尾**直接追加** `apiToken`（无 `&`），**MD5 取小写** |
+| 回调 | `POST {站点}/api/callback/bepusdt`，含 `order_id / amount / actual_amount / token / block_transaction_id / signature / status`；`status`：1=等待支付（每分钟推送）、2=支付成功、3=支付超时 |
+| 应答 | 成功返回纯文本 `ok`（官方两份文档分别写了 `ok` / `success`，可在通道配置「回调应答文本」中切换） |
+| 幂等 | 已越过待支付的订单收到重复 `status=2` 只记日志不重复处理；已进入终态的订单不回溯改状态 |
+| 验签 | 回调**强制验签**（恒定时间比较），失败应答 `SIGN_ERROR` 并写审计日志 |
+
+> ⚠️ 两点注意：
+> 1. 平台「支付配置 → 沙箱模式」与「系统设置 → 全站沙箱模式」是**两个独立开关**：前者控制支付通道，后者控制上游充值通道。
+> 2. 金额按「最短数值字符串」参与签名与传输（`20` 而非 `20.00`），避免与网关侧数值解析不一致导致验签失败；签名金标准已用官方文档样例做过断言（见 `test-bepusdt.js` A 段）。
 
 ### 6. 前台多语言
 - **默认英语**；打开后台「系统设置 → 前台多语言」可切换默认语言。
@@ -278,6 +322,7 @@ node tools/import-source.js data/source-import/xxx.json --seed  # 同时写入�
 | POST | `/api/orders/:no/pay` | 模拟支付并触发自动派单 |
 | POST | `/api/orders/query` | 按订单号/充值账号查询 |
 | POST | `/api/callback/supplier` | 上游异步回调 |
+| POST | `/api/callback/bepusdt` | **BEpusdt 数字货币网关回调**（强制验签 + 幂等 + 超时关单） |
 | POST | `/api/admin/login` | 后台登录（返回 Bearer Token） |
 | GET | `/api/admin/overview` | 经营看板数据 |
 | GET | `/api/admin/orders` | 订单列表（筛选/搜索/分页） |
@@ -291,6 +336,7 @@ node tools/import-source.js data/source-import/xxx.json --seed  # 同时写入�
 | GET/POST | `/api/admin/settings` | 系统设置（站点 / 交易参数 / 多语言 / 支付配置与各通道参数） |
 | POST | `/api/admin/password` | **修改管理员密码**（校验 + 二次确认 + 注销其他会话 + 审计日志） |
 | GET | `/api/admin/i18n/test` | 语言识别自测（`?ip=114.114.114.114`） |
+| POST | `/api/admin/pay/bepusdt/test` | **BEpusdt 网关连通性自测**（真实创建并取消最小订单，返回签名原串） |
 | GET | `/api/admin/logs` | 操作日志 |
 
 ---
@@ -300,14 +346,14 @@ node tools/import-source.js data/source-import/xxx.json --seed  # 同时写入�
 当前实现是**完整的业务骨架 + 沙箱模拟**，正式对外运营前建议补齐：
 
 1. **数据存储**：`data/db.json` 适合单机小流量。并发上量后请迁移到 MySQL / PostgreSQL（`lib/db.js` 的 `get()/save()` 是唯一出入口，替换成本低）
-2. **支付接入**：国内扫码通道把 `payConfig` 换成真实易支付 / 当面付 / 微信 Native；信用卡在「支付配置 → 国际信用卡」填入 Stripe 密钥即在服务端创建 Checkout Session；PayPal 在「支付配置 → PayPal」填收款邮箱并选 Live。**上线前必须在 `POST /api/callback/pay` 补做签名校验**（当前未验签，任何人可伪造支付成功）
+2. **支付接入**：国内扫码通道把 `payConfig` 换成真实易支付 / 当面付 / 微信 Native；信用卡在「支付配置 → 国际信用卡」填入 Stripe 密钥即在服务端创建 Checkout Session；PayPal 在「支付配置 → PayPal」填收款邮箱并选 Live；数字货币推荐按 5.1 接入 BEpusdt 网关（**该通道回调已强制验签**）。**上线前必须在 `POST /api/callback/pay` 补做签名校验**（易支付/信用卡/PayPal 这条通用回调目前未验签，任何人可伪造支付成功；BEpusdt 走独立回调已验签）
 3. **上游密钥加密**：`appSecret` / `secretKey` / `clientSecret` 目前以明文存在 `data/db.json`，建议改为环境变量或 KMS 加密
 4. **后台安全**：口令已改为 scrypt 加盐哈希存储并加了「10 分钟 5 次失败锁定」，默认口令 `admin888` 仍必须修改；建议再加验证码、IP 白名单、操作二次确认
 5. **多语言**：IP 归属地查询默认走 `ip-api.com` 免费接口（HTTP，45 次/分钟）。正式运营建议换成自有 IP 库或商业接口，并在后台「系统设置 → 前台多语言」调大缓存时长
 6. **合规**：虚拟商品代充业务需关注平台服务协议、发票、实名与风控要求，避免代充来源不明的账号。
    **账号类商品（如本批 `p18`~`p26` 的邮箱账号）风险更高**：货源方自身即声明「仅为有偿租用，仅限合法邮件接收与验证，禁止诈骗 / 赌博 / 洗钱 / 非法批量注册 / 绕过平台风控」，且账号所有权仍在货源方。这类商品在多数平台的服务条款下属于高风险用途，建议保留商品说明与合规声明、限制单笔/单人购买数量、对异常订单人工复核，并自行评估是否值得上架
 7. **可靠性**：为「充值中」订单加定时对账任务（轮询上游查单接口），避免回调丢失导致订单卡住
-8. **加密货币收款**：当前为「展示地址 + 买家回填 TxID」的人工核验模式；如需自动到账，需接入链上监听（TronGrid / Etherscan 等）按 `payTxId` 自动核销
+8. **加密货币收款**：默认是「固定地址 + 买家回填 TxID」的人工核验模式；**如需自动到账与逐单地址，推荐接入 BEpusdt 网关（见 5.1）**，无需自研链上监听
 
 ---
 

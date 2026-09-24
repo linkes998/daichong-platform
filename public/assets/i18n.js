@@ -174,6 +174,11 @@ const UI = {
     'usdt.copyAmount': 'Amount copied',
     'usdt.tooSmall': 'Amount is below the minimum of {0} USDT. Please increase the quantity.',
 
+    'gateway.goPay': 'Open Crypto Checkout',
+    'gateway.confirmNote':
+      'This order is handled by the BEpusdt gateway. Transfer to the address shown on the checkout page — the order completes automatically once confirmed on-chain.',
+    'gateway.autoNote': 'This page updates automatically after on-chain confirmation. No action needed here.',
+
     'pay.redirect': 'Proceed to Payment',
     'pay.redirectNote': 'You will be redirected to a secure third-party checkout to complete payment.',
     'pay.cardTitle': 'Card Payment',
@@ -403,6 +408,10 @@ const UI = {
     'usdt.copyAddress': '地址已复制',
     'usdt.copyAmount': '金额已复制',
     'usdt.tooSmall': '金额低于最小收款 {0} USDT，请增加购买数量',
+
+    'gateway.goPay': '前往数字货币收银台',
+    'gateway.confirmNote': '本订单由 BEpusdt 网关处理：请按收银台页面显示的地址转账，链上确认后系统自动完成订单。',
+    'gateway.autoNote': '链上确认后本页会自动更新，无需在此手动操作。',
 
     'pay.redirect': '前往支付',
     'pay.redirectNote': '将跳转到第三方安全收银台完成支付',

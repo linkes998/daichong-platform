@@ -973,6 +973,12 @@ async function renderPay() {
       <div class="panel-body">
         ${offHint('usdt')}
         <div class="form-grid">
+          <div class="field full"><label>收款模式</label>
+            <select class="select" id="uProvider">
+              <option value="manual" ${usdt.provider !== 'bepusdt' ? 'selected' : ''}>手动地址 —— 展示固定收款地址，买家回填 TxID 后人工核验（零依赖）</option>
+              <option value="bepusdt" ${usdt.provider === 'bepusdt' ? 'selected' : ''}>BEpusdt 网关 —— 逐单分配收款地址，链上自动确认并回调完成订单</option>
+            </select>
+            <div class="hint">手动模式需填写下方「收款地址」；网关模式由 BEpusdt 逐单分配地址，下方地址仅作兜底展示。</div></div>
           <div class="field"><label>收款网络</label>
             <select class="select" id="uNetwork">
               ${['TRC20', 'ERC20', 'BEP20', 'Polygon', 'Solana']
@@ -997,6 +1003,45 @@ async function renderPay() {
             <div class="hint">如需可被钱包真实扫描的二维码，填入你的二维码服务地址，例如 <span class="mono">https://你的域名/qr?text={address}</span>。</div></div>
           <div class="field full"><label>收款提示（展示在收银台）</label>
             <textarea class="textarea" id="uTips" placeholder="例如：请务必使用所选网络转账，跨链转账将导致资金丢失。">${escapeHtml(usdt.tips || '')}</textarea></div>
+        </div>
+
+        <div class="form-sec">BEpusdt 网关参数（收款模式选「BEpusdt 网关」时生效）</div>
+        <div class="form-grid">
+          <div class="field full"><label>网关地址 gatewayUrl</label>
+            <input class="input" id="uGwUrl" value="${escapeHtml(usdt.gatewayUrl || '')}" placeholder="http://127.0.0.1:8080">
+            <div class="hint">BEpusdt 站点根地址；若与本平台同机部署，可用 127.0.0.1 内网访问。</div></div>
+          <div class="field full"><label>对接令牌 apiToken</label>
+            <input class="input mono" id="uGwToken" type="password" value="${escapeHtml(usdt.apiToken || '')}" placeholder="后台 → 系统管理 → 基本设置 → API 设置 → 对接令牌">
+            <div class="hint">仅保存在服务端，<b>不会下发到前台</b>。签名规则：非空参数按 key 字典序拼 k=v&amp;k=v，末尾直接追加令牌，MD5 取小写。</div></div>
+          <div class="field"><label>交易类型 trade_type</label>
+            <select class="select" id="uGwTrade">
+              ${['usdt.trc20', 'usdt.erc20', 'usdt.bep20', 'usdt.polygon', 'usdt.solana', 'usdt.aptos', 'usdt.xlayer', 'usdt.arbitrum', 'usdt.plasma', 'usdt.ton', 'tron.trx', 'ethereum.eth', 'bsc.bnb']
+                .map((x) => `<option value="${x}" ${usdt.tradeType === x ? 'selected' : ''}>${x}</option>`)
+                .join('')}
+            </select></div>
+          <div class="field"><label>法币类型 fiat</label>
+            <select class="select" id="uGwFiat">
+              ${['CNY', 'USD', 'EUR', 'GBP', 'JPY'].map((x) => `<option value="${x}" ${(usdt.fiat || 'CNY') === x ? 'selected' : ''}>${x}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>网关订单超时（秒）</label>
+            <input class="input" id="uGwTimeout" type="number" value="${Number(usdt.timeoutSec) || 600}">
+            <div class="hint">网关最小 120 秒；建议与本平台「订单支付有效期」保持一致。</div></div>
+          <div class="field"><label>回调应答文本</label>
+            <input class="input" id="uGwAck" value="${escapeHtml(usdt.notifyAck || 'ok')}" placeholder="ok">
+            <div class="hint">官方两份文档分别写了 ok / success，默认 ok；若网关持续重推回调可改为 success。</div></div>
+          <div class="field full"><label class="switch ${usdt.useCashier ? 'on' : ''}" id="uGwCashier" onclick="this.classList.toggle('on')">
+            <span class="track"></span><span>使用网关收银台（create-order：买家在网关页面自选币种 / 网络）</span></label>
+            <div class="hint">关闭则走 create-transaction：平台锁定交易类型与金额，直接返回逐单收款地址。</div></div>
+          <div class="field full"><label>限定币种 currencies（仅收银台模式）</label>
+            <input class="input" id="uGwCur" value="${escapeHtml(usdt.currencies || '')}" placeholder="留空不限制；例如 USDT 或 -ETH,-BNB"></div>
+          <div class="field full"><label>回调地址 notifyUrl（留空自动生成）</label>
+            <input class="input" id="uGwNotify" value="${escapeHtml(usdt.notifyUrl || '')}" placeholder="留空则使用 {站点}/api/callback/bepusdt"></div>
+          <div class="field full"><label>支付完成跳转 redirectUrl（留空自动生成）</label>
+            <input class="input" id="uGwRedirect" value="${escapeHtml(usdt.redirectUrl || '')}" placeholder="留空则使用 {站点}/pay.html?no={订单号}"></div>
+        </div>
+        <div class="row-flex" style="margin-top:4px;flex-wrap:wrap;gap:10px">
+          <button class="btn btn-sm" onclick="testBepusdt()">🔌 测试网关连通性</button>
+          <div class="hint" id="gwTestOut" style="margin:0">自测会真实创建一笔 1 法币的最小订单并立即取消，用于验证网关地址、对接令牌与签名。</div>
         </div>
       </div>
     </div>
@@ -1082,6 +1127,7 @@ async function savePay() {
         autoRefundOnFail: on('gAutoRefund'),
         channels: {
           usdt: {
+            provider: v('uProvider') || 'manual',
             network: v('uNetwork'),
             address: v('uAddr'),
             rate: Number(v('uRate')) || 0,
@@ -1091,6 +1137,17 @@ async function savePay() {
             uniqueAmount: on('uUnique'),
             qrTemplate: v('uQr'),
             tips: v('uTips'),
+            // BEpusdt 网关参数
+            gatewayUrl: v('uGwUrl'),
+            apiToken: v('uGwToken'),
+            tradeType: v('uGwTrade'),
+            fiat: v('uGwFiat'),
+            timeoutSec: Number(v('uGwTimeout')) || 600,
+            notifyAck: v('uGwAck') || 'ok',
+            useCashier: on('uGwCashier'),
+            currencies: v('uGwCur'),
+            notifyUrl: v('uGwNotify'),
+            redirectUrl: v('uGwRedirect'),
           },
           creditcard: {
             provider: v('cProvider'),
@@ -1118,6 +1175,60 @@ async function savePay() {
   if (!res.ok) return toast(res.message || '保存失败', 'err');
   toast('支付配置已保存', 'ok');
   renderPay();
+}
+
+/** BEpusdt 网关连通性自测：用当前表单值真实创建最小订单并取消，返回签名原串便于核对 */
+async function testBepusdt() {
+  const out = document.getElementById('gwTestOut');
+  const v = (k) => { const e = document.getElementById(k); return e ? e.value.trim() : ''; };
+  const on = (k) => { const e = document.getElementById(k); return !!(e && e.classList.contains('on')); };
+  out.style.color = 'var(--text-3)';
+  out.textContent = '正在向网关发起自测订单…';
+  const channel = {
+    gatewayUrl: v('uGwUrl'),
+    apiToken: v('uGwToken'),
+    tradeType: v('uGwTrade'),
+    fiat: v('uGwFiat'),
+    timeoutSec: Number(v('uGwTimeout')) || 600,
+    notifyAck: v('uGwAck') || 'ok',
+    useCashier: on('uGwCashier'),
+    currencies: v('uGwCur'),
+    notifyUrl: v('uGwNotify'),
+    redirectUrl: v('uGwRedirect'),
+  };
+  const res = await api('/api/admin/pay/bepusdt/test', { method: 'POST', body: { channel } });
+  if (!res.ok) {
+    out.style.color = 'var(--danger)';
+    out.textContent = res.message || '自测请求失败';
+    return;
+  }
+  const r = res.result;
+  out.style.color = r.ok ? 'var(--ok)' : 'var(--danger)';
+  out.textContent = (r.ok ? '✅ ' : '❌ ') + r.message + (r.latency ? `（耗时 ${r.latency} ms）` : '') + (r.cancelMessage ? ' · ' + r.cancelMessage : '');
+
+  const body = `
+    <div class="row-flex" style="margin-bottom:16px">
+      <span style="font-size:26px">${r.ok ? '✅' : '❌'}</span>
+      <div><b style="font-size:15px">${escapeHtml(r.message)}</b>
+      <div class="muted" style="font-size:12.5px">网关：${escapeHtml(r.gateway || channel.gatewayUrl)} · 阶段：${escapeHtml(r.stage || '-')}${
+        r.latency ? ' · 耗时 ' + r.latency + ' ms' : ''
+      }</div></div>
+    </div>
+    ${r.tradeId ? `<div class="code-box">trade_id：${escapeHtml(r.tradeId)}
+逐单收款地址：${escapeHtml(r.address || '-')}
+应付金额：${escapeHtml(r.actualAmount || '-')}（自测金额 0.01 ${escapeHtml(channel.fiat)}）
+有效期：${escapeHtml(r.expireSec || '-')} 秒
+收银台：${escapeHtml(r.paymentUrl || '-')}</div>` : ''}
+    <div class="sec-title" style="margin-top:0"><span class="n">1</span>请求参数（实际发送内容）</div>
+    <div class="code-box">${escapeHtml(JSON.stringify(r.request || {}, null, 2))}</div>
+    <div class="sec-title"><span class="n">2</span>签名原串（末尾即为对接令牌）</div>
+    <div class="code-box">${escapeHtml(r.signString || '')}</div>
+    ${r.response ? `<div class="sec-title"><span class="n">3</span>网关返回</div><div class="code-box">${escapeHtml(JSON.stringify(r.response, null, 2))}</div>` : ''}
+    <div class="hint" style="margin-top:14px">若返回「网关拒绝」，多为对接令牌不正确或金额/参数写法与网关不一致：可把「请求参数」与「签名原串」发给网关侧核对。</div>`;
+  const foot = `<button class="btn btn-sm" onclick="copyText(${JSON.stringify(JSON.stringify(r.request || {}))},'请求参数已复制')">复制参数</button>
+    <button class="btn btn-sm" onclick="copyText(${JSON.stringify(r.signString || '')},'签名原串已复制')">复制签名原串</button>
+    <button class="btn btn-sm btn-primary" style="margin-left:auto" onclick="closeModal()">知道了</button>`;
+  openModal({ title: 'BEpusdt 网关连通性自测结果', body, foot, maxWidth: 820 });
 }
 
 /* ============================================================

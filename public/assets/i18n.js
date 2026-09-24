@@ -487,6 +487,15 @@ const UI = {
 /* ------------------------------------------------------------------ */
 
 const CONTENT_EN = {
+  /* ---- 站点默认文案（后台未填写英文字段时的兜底）---- */
+  '云充站': 'YunChong',
+  '会员代充 · 极速到账': 'Membership Top-up · Instant Delivery',
+  '一站式会员套餐代充 简单、透明、快速': 'One-stop membership top-up. Simple, transparent, fast.',
+  '新用户首单立减 3 元｜下单请务必核对充值账号，提交后不可修改｜工作时间 09:00-23:00｜邮箱账号类商品仅支持接收邮件，请合规使用，违规订单不予售后':
+    'New users get ¥3 off the first order｜Always double-check the account before ordering — it cannot be changed afterwards｜Support hours 09:00-23:00｜Mailbox products are for receiving mail only; please use them legally.',
+  '新用户首单立减 3 元｜请务必核对充值账号': 'New users get ¥3 off the first order｜Always double-check the account',
+  '09:00 - 23:00': '09:00 - 23:00',
+
   /* ---- 分类 ---- */
   '视频会员': 'Video Streaming',
   '音乐音频': 'Music & Audio',

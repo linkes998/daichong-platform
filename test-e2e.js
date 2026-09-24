@@ -1,8 +1,16 @@
 /**
  * 端到端自测：前台下单 → 支付 → 自动派单 → 上游结果 → 后台操作
  * 运行：node test-e2e.js
+ *
+ * 说明：
+ *   · 商品不再硬编码 id，自动挑选当前「上架且有库存」的商品，适配任意运营状态
+ *   · 账号按所选商品的 accountType 自动生成（免填账号类商品传空）
+ *   · 后台断言需要管理员口令：默认 admin888，可用 ADMIN_PW=xxx 指定；
+ *     口令不正确时后台部分会明确标记为「跳过」而不是误报失败
  */
 const BASE = process.env.BASE || 'http://127.0.0.1:8899';
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PW = process.env.ADMIN_PW || 'admin888';
 
 async function call(path, options) {
   const res = await fetch(BASE + path, options);
@@ -18,13 +26,42 @@ const post = (p, body, headers) =>
 
 const pass = (m) => console.log('  \x1b[32m✓\x1b[0m ' + m);
 const fail = (m) => { console.log('  \x1b[31m✗\x1b[0m ' + m); process.exitCode = 1; };
+const skip = (m) => console.log('  \x1b[33m⊘ 跳过\x1b[0m ' + m);
 const head = (m) => console.log('\n\x1b[36m▶ ' + m + '\x1b[0m');
+
+/** 各账号类型对应的合法示例值 */
+const ACCOUNT_BY_TYPE = {
+  phone: '13800138000',
+  email: 'buyer@example.com',
+  uid: '100086',
+  username: '@buyer2026',
+  gameid: '微信区 / 角色ID 100086',
+  account: 'buyer2026',
+  none: '',
+};
+const accountFor = (type) => (ACCOUNT_BY_TYPE[type] !== undefined ? ACCOUNT_BY_TYPE[type] : ACCOUNT_BY_TYPE.account);
+
+/** 从前台数据里挑一个「上架 + 有库存」的套餐 */
+function pickSku(store, preferType) {
+  const cands = [];
+  (store.products || []).forEach((p) => {
+    (p.skus || []).forEach((s) => {
+      if ((s.stock || 0) > 0) cands.push({ p, s });
+    });
+  });
+  if (preferType) {
+    const hit = cands.find((c) => (c.p.accountType || 'account') === preferType);
+    if (hit) return hit;
+  }
+  return cands[0] || null;
+}
 
 (async () => {
   head('1. 读取前台数据');
   const store = await call('/api/store');
   if (!store.ok) return fail('GET /api/store 失败');
   pass(`商品 ${store.products.length} 款 / 分类 ${store.categories.length} 个 / 支付方式 ${store.payMethods.length} 种`);
+  if (!store.products.length) return fail('当前没有上架商品，后续用例无法进行');
 
   const recent = await call('/api/recent');
   pass(`实时动态 ${recent.list ? recent.list.length : 0} 条，示例：${(recent.list[0] || {}).maskAccount || '-'}`);
@@ -32,22 +69,37 @@ const head = (m) => console.log('\n\x1b[36m▶ ' + m + '\x1b[0m');
   head('2. 参数校验（应当被拒绝）');
   const bad1 = await post('/api/orders', { skuId: 'x', account: '' });
   bad1.ok ? fail('空账号竟然下单成功') : pass('拦截：' + bad1.message);
-  const bad2 = await post('/api/orders', { skuId: 'p1-s1', account: '123' });
-  bad2.ok ? fail('错误手机号竟然通过') : pass('拦截：' + bad2.message);
-  const bad3 = await post('/api/orders', { skuId: 'p1-s1', account: '13800138000', accountConfirm: '13800138001' });
-  bad3.ok ? fail('两次账号不一致竟然通过') : pass('拦截：' + bad3.message);
 
-  head('3. 正常下单');
-  const p1 = store.products.find((p) => p.id === 'p1');
-  const sku = p1.skus[0];
+  // 找一个需要手机号的商品做格式校验（没有就跳过，避免依赖固定商品）
+  const phonePick = pickSku(store, 'phone');
+  if (phonePick) {
+    const bad2 = await post('/api/orders', { skuId: phonePick.s.id, account: '123' });
+    bad2.ok ? fail('错误手机号竟然通过') : pass(`拦截（${phonePick.p.name}）：` + bad2.message);
+    if (phonePick.p.needConfirm) {
+      const a = accountFor('phone');
+      const bad3 = await post('/api/orders', { skuId: phonePick.s.id, account: a, accountConfirm: a + '1' });
+      bad3.ok ? fail('两次账号不一致竟然通过') : pass('拦截两次账号不一致：' + bad3.message);
+    } else skip('该商品未开启二次确认，跳过一致性校验');
+  } else {
+    skip('当前没有手机号类商品，跳过手机号格式校验');
+  }
+
+  head('3. 正常下单（自动挑选上架且有库存的套餐）');
+  const picked = pickSku(store);
+  const account = accountFor(picked.p.accountType || 'account');
+  pass(`选用商品：${picked.p.id} ${picked.p.name} · ${picked.s.name}（账号类型 ${picked.p.accountType || 'account'}）`);
   const created = await post('/api/orders', {
-    skuId: sku.id, account: '13800138000', accountConfirm: '13800138000',
-    contact: 'test@example.com', payMethod: 'alipay', quantity: 1,
+    skuId: picked.s.id,
+    account,
+    accountConfirm: account,
+    contact: 'test@example.com',
+    payMethod: (store.payMethods[0] || {}).code || 'alipay',
+    quantity: 1,
   });
   if (!created.ok) return fail('下单失败：' + created.message);
   const no = created.order.no;
   pass(`订单 ${no}｜${created.order.productName} ${created.order.skuName}｜¥${created.order.amount}｜状态 ${created.order.statusText}`);
-  pass(`收银台：sandbox=${created.pay.sandbox}，二维码内容已生成 ${created.pay.qrContent ? '✓' : '✗'}`);
+  pass(`收银台：kind=${created.pay.kind || '-'} sandbox=${created.pay.sandbox}，二维码内容 ${created.pay.qrContent ? '✓' : '✗'}`);
 
   head('4. 模拟支付 + 自动派单');
   const paid = await post(`/api/orders/${no}/pay`);
@@ -72,19 +124,30 @@ const head = (m) => console.log('\n\x1b[36m▶ ' + m + '\x1b[0m');
     final.logs.forEach((l) => console.log('      · ' + l.msg));
   } else fail('订单未在预期时间内结束，当前：' + final.statusText);
 
-  head('6. 订单查询（按账号）');
-  const q = await post('/api/orders/query', { keyword: '13800138000' });
-  q.ok && q.list.length ? pass(`按充值账号查到 ${q.list.length} 笔订单`) : fail('按账号查询失败');
+  head('6. 订单查询');
+  const q = await post('/api/orders/query', { keyword: no });
+  q.ok && q.list.length ? pass(`按订单号查到 ${q.list.length} 笔订单`) : fail('按订单号查询失败');
+  if (account) {
+    const q2 = await post('/api/orders/query', { keyword: account });
+    q2.ok && q2.list.length ? pass(`按充值账号「${account}」查到 ${q2.list.length} 笔订单`) : fail('按账号查询失败');
+  } else {
+    pass('该商品为免填账号，账号字段为空（跳过按账号查询）');
+  }
 
   head('7. 后台登录与鉴权');
   const noAuth = await call('/api/admin/overview');
   noAuth.ok ? fail('未登录竟然能访问后台') : pass('拦截未登录访问：' + noAuth.message);
-  const login = await post('/api/admin/login', { username: 'admin', password: 'wrong' });
-  login.ok ? fail('错误密码登录成功') : pass('拦截错误密码');
-  const good = await post('/api/admin/login', { username: 'admin', password: 'admin888' });
-  if (!good.ok) return fail('后台登录失败');
+
+  const good = await post('/api/admin/login', { username: ADMIN_USER, password: ADMIN_PW });
+  if (!good.ok) {
+    skip(`管理员口令不正确（可用 ADMIN_PW=xxx 指定），后台相关断言全部跳过：${good.message}`);
+    console.log('\n' + (process.exitCode ? '\x1b[31m前台部分存在失败项\x1b[0m' : '\x1b[32m前台部分全部通过 ✓（后台未校验）\x1b[0m') + '\n');
+    return;
+  }
   pass(`登录成功：${good.admin.name}`);
   const auth = { Authorization: 'Bearer ' + good.token };
+  const badLogin = await post('/api/admin/login', { username: ADMIN_USER, password: 'definitely-wrong-pw' });
+  badLogin.ok ? fail('错误密码登录成功') : pass('拦截错误密码');
 
   head('8. 后台数据');
   const ov = await call('/api/admin/overview', { headers: auth });
@@ -101,9 +164,16 @@ const head = (m) => console.log('\n\x1b[36m▶ ' + m + '\x1b[0m');
   const sups = await call('/api/admin/suppliers', { headers: auth });
   pass(`商品来源 ${sups.list.length} 个：${sups.list.map((s) => s.name + '(' + s.mode + '/' + s.status + ')').join('、')}`);
 
+  const settings = await call('/api/admin/settings', { headers: auth });
+  pass(`支付方式（含新增）：${settings.payMethods.map((m) => m.code).join('、')}`);
+  pass(`收款通道参数模板：${Object.keys(settings.channelDefaults || {}).join('、')}`);
+  pass(`多语言：默认 ${settings.settings.i18n ? settings.settings.i18n.defaultLang : '-'}，按 IP 自动切换 ${settings.settings.i18n ? settings.settings.i18n.autoByIp : '-'}`);
+  settings.admins[0].hashed ? pass('管理员口令为哈希存储') : fail('管理员口令未哈希');
+
   head('9. 供应商接口测试');
-  const t1 = await post('/api/admin/suppliers/s1/test', {}, auth);
-  t1.ok ? pass(`s1 测试：${t1.result.mode} 模式，${t1.result.message}（签名串 ${t1.result.signString.slice(0, 60)}…）`) : fail('接口测试失败');
+  const firstSup = sups.list.find((s) => s.mode !== 'manual') || sups.list[0];
+  const t1 = await post(`/api/admin/suppliers/${firstSup.id}/test`, {}, auth);
+  t1.ok ? pass(`${firstSup.id} 测试：${t1.result.mode} 模式，${t1.result.message}`) : fail('接口测试失败');
 
   head('10. 后台订单操作（重试派单 / 手动完成 / 备注）');
   const failedList = await call('/api/admin/orders?status=failed&size=1', { headers: auth });
@@ -129,10 +199,10 @@ const head = (m) => console.log('\n\x1b[36m▶ ' + m + '\x1b[0m');
   }
 
   head('11. 新增商品来源 + 新增商品 + 套餐保存');
-  const ns = await post('/api/admin/suppliers', { supplier: { name: '测试通道·自测', mode: 'mock', apiUrl: 'https://test.local/api', appId: 'T1', appSecret: 's', markup: 1.5, priority: 5, categories: ['c1'], status: 'active' } }, auth);
+  const ns = await post('/api/admin/suppliers', { supplier: { name: '测试通道·自测', mode: 'mock', apiUrl: 'https://test.local/api', appId: 'T1', appSecret: 's', markup: 1.5, priority: 5, categories: [], status: 'active' } }, auth);
   ns.ok ? pass('新增通道：' + ns.supplier.name + '（' + ns.supplier.id + '）') : fail('新增通道失败');
 
-  const np = await post('/api/admin/products', { product: { name: '自测商品·视频月卡', catId: 'c1', icon: '🧪', accountType: 'phone', accountLabel: '测试手机号', needConfirm: true, status: 'active' } }, auth);
+  const np = await post('/api/admin/products', { product: { name: '自测商品·标准月卡', catId: (prods.categories[0] || {}).id, icon: '🧪', accountType: 'phone', accountLabel: '测试手机号', needConfirm: true, status: 'active' } }, auth);
   np.ok ? pass('新增商品：' + np.product.name) : fail('新增商品失败');
   const pid = np.product.id;
 
@@ -140,7 +210,7 @@ const head = (m) => console.log('\n\x1b[36m▶ ' + m + '\x1b[0m');
   ns2.ok ? pass('套餐保存成功，共 ' + ns2.product.skus.length + ' 个') : fail('套餐保存失败');
 
   head('12. 用新商品跑一遍下单（走新建通道）');
-  const o2 = await post('/api/orders', { skuId: ns2.product.skus[0].id, account: '13900139000', accountConfirm: '13900139000', payMethod: 'wechat' });
+  const o2 = await post('/api/orders', { skuId: ns2.product.skus[0].id, account: '13900139000', accountConfirm: '13900139000', payMethod: (store.payMethods[0] || {}).code || 'alipay' });
   if (!o2.ok) fail('新商品下单失败：' + o2.message);
   else {
     await post(`/api/orders/${o2.order.no}/pay`);

@@ -35,7 +35,7 @@ function card(o) {
     <div class="top">
       <span style="font-size:19px">${st.icon || '📦'}</span>
       <div>
-        <div class="nm">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</div>
+        <div class="nm">${escapeHtml(pick(o.productName, o.productNameEn))} · ${escapeHtml(pick(o.skuName, o.skuNameEn))}</div>
         <div class="muted mono" style="font-size:12px">${o.no}</div>
       </div>
       <div class="st">${statusChip(o.status)}

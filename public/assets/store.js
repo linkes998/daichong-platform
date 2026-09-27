@@ -50,8 +50,17 @@ async function boot() {
     renderTabs();
     renderProducts();
     loadLive();
-    if (state.product && state.view !== 'form') renderModal();
-  });
+    if (!state.product) return;
+    if (state.view !== 'form') return renderModal();
+    // 表单视图里有用户正在输入的内容（充值账号 / 确认账号 / 联系方式 / 备注），
+    // 这些输入框不挂在 state 上，直接重渲染会清空。这里先暂存、渲染后还原，
+    // 从而让弹窗内的商品名、套餐名、字段标签也能即时跟随语言切换。
+    const typing = ['accountInput', 'accountConfirm', 'contactInput', 'remarkInput']
+      .map((id) => { const el = document.getElementById(id); return el ? [id, el.value] : null; })
+      .filter(Boolean);
+    renderModal();
+    typing.forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.value = val; });
+    });
 }
 
 /** 站点名 / 副标题 / 标语 / 公告等由后台配置的文案 */
@@ -127,7 +136,7 @@ function visibleProducts() {
   return STORE.products.filter((p) => {
     if (state.activeCat !== 'all' && p.catId !== state.activeCat) return false;
     if (!kw) return true;
-    const hay = [p.name, p.nameEn || '', p.subtitle || '', (p.tags || []).join(''), (p.skus || []).map((s) => s.name).join('')]
+    const hay = [p.name, p.nameEn || '', p.subtitle || '', p.subtitleEn || '', (p.tags || []).join(''), (p.skus || []).map((s) => s.name + (s.nameEn || '')).join('')]
       .join(' ')
       .toLowerCase();
     return hay.includes(kw);
@@ -203,7 +212,7 @@ async function loadLive() {
       return `<div class="live-item">
         <div class="ico" style="background:${hexA(p.hue || '#6d5efc', 0.16)}">${p.icon || '🎁'}</div>
         <div class="txt">
-          <div><b>${escapeHtml(o.maskAccount)}</b> ${escapeHtml(t('live.bought'))} ${escapeHtml(pick(o.productName))} · ${escapeHtml(pick(o.skuName))}</div>
+          <div><b>${escapeHtml(o.maskAccount)}</b> ${escapeHtml(t('live.bought'))} ${escapeHtml(pick(o.productName, o.productNameEn))} · ${escapeHtml(pick(o.skuName, o.skuNameEn))}</div>
           <div>${fmtShort(o.createdAt)} · ${escapeHtml(statusLabel(o.status))}</div>
         </div>
       </div>`;
@@ -295,7 +304,7 @@ function formView() {
           .map(
             (s) => `<div class="sku-item ${s.id === state.skuId ? 'on' : ''}" data-sku="${s.id}">
               <div class="radio"></div>
-              <div class="info"><b>${escapeHtml(t(s.name))}</b><div>${s.faceValue > 0 && s.faceValue !== s.price ? price(s.faceValue) + ' · ' : ''}${s.stock > 0 ? escapeHtml(t('products.stockLeft', s.stock)) : escapeHtml(t('products.soldOut'))}</div></div>
+              <div class="info"><b>${escapeHtml(pick(s.name, s.nameEn))}</b><div>${s.faceValue > 0 && s.faceValue !== s.price ? price(s.faceValue) + ' · ' : ''}${s.stock > 0 ? escapeHtml(t('products.stockLeft', s.stock)) : escapeHtml(t('products.soldOut'))}</div></div>
               <div class="p"><b>${price(s.price)}</b>${s.faceValue > 0 && s.faceValue !== s.price ? `<div>${price(s.faceValue)}</div>` : ''}</div>
             </div>`
           )
@@ -484,7 +493,7 @@ function cashierView() {
 /** 头部：订单摘要 */
 function cashierInfoRows(o) {
   return `<div class="info-rows" style="margin-bottom:16px">
-      <div class="r"><span class="k">${escapeHtml(t('cashier.product'))}</span><span class="v">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('cashier.product'))}</span><span class="v">${escapeHtml(pick(o.productName, o.productNameEn))} · ${escapeHtml(pick(o.skuName, o.skuNameEn))}</span></div>
       ${o.account
         ? `<div class="r"><span class="k">${escapeHtml(t('cashier.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>`
         : `<div class="r"><span class="k">${escapeHtml(t('cashier.delivery'))}</span><span class="v">${escapeHtml(t('cashier.auto'))}</span></div>`}
@@ -804,7 +813,7 @@ function resultInner() {
     <div class="info-rows">
       <div class="r"><span class="k">${escapeHtml(t('result.orderNo'))}</span><span class="v"><b>${o.no}</b>
         <button class="btn btn-xs btn-ghost" onclick="copyText('${o.no}','${escapeHtml(t('toast.copied'))}')">⧉</button></span></div>
-      <div class="r"><span class="k">${escapeHtml(t('result.product'))}</span><span class="v">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('result.product'))}</span><span class="v">${escapeHtml(pick(o.productName, o.productNameEn))} · ${escapeHtml(pick(o.skuName, o.skuNameEn))}</span></div>
       ${o.account ? `<div class="r"><span class="k">${escapeHtml(t('result.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>` : `<div class="r"><span class="k">${escapeHtml(t('cashier.delivery'))}</span><span class="v">${escapeHtml(t('cashier.auto'))}</span></div>`}
       <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">${price(o.amount)}（${escapeHtml(pick(o.payMethodName))}）</span></div>
       ${o.payTxId ? `<div class="r"><span class="k">TxID</span><span class="v mono" style="word-break:break-all">${escapeHtml(o.payTxId)}</span></div>` : ''}

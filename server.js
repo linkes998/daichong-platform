@@ -218,6 +218,26 @@ function decorate(order) {
   const sup = data.suppliers.find((s) => s.id === o.supplierId);
   o.supplierName = sup ? sup.name : '未分配';
   o.grossProfit = round2((o.amount || 0) - (o.cost || 0) * (o.quantity || 1));
+  fillOrderI18n(o, data);
+  return o;
+}
+
+/**
+ * 回填订单快照里缺失的英文标题。
+ * 订单存的是下单时刻的快照，那时商品可能还没配英文名；
+ * 回填后，运营补配英文名时历史订单也能正确显示英文。
+ */
+function fillOrderI18n(o, data) {
+  if (o.productNameEn && o.skuNameEn) return o;
+  const src = data || db.get();
+  const product = src.products.find((p) => p.id === o.productId);
+  if (product) {
+    if (!o.productNameEn) o.productNameEn = product.nameEn || '';
+    if (!o.skuNameEn) {
+      const sku = (product.skus || []).find((s) => s.id === o.skuId || s.name === o.skuName);
+      if (sku) o.skuNameEn = sku.nameEn || '';
+    }
+  }
   return o;
 }
 
@@ -413,8 +433,10 @@ function genDemoOrders() {
       no: 'DC' + created.getFullYear() + String(created.getMonth() + 1).padStart(2, '0') + String(created.getDate()).padStart(2, '0') + crypto.randomBytes(3).toString('hex').toUpperCase(),
       productId: p.id,
       productName: p.name,
+      productNameEn: p.nameEn || '',
       skuId: sku.id,
       skuName: sku.name,
+      skuNameEn: sku.nameEn || '',
       account: p.accountType === 'none' ? '' : accounts[p.accountType] ? accounts[p.accountType]() : 'user_demo',
       accountType: p.accountType || 'account',
       contact: '',
@@ -621,14 +643,21 @@ async function handleApi(req, res, pathname, query) {
     const list = data.orders
       .filter((o) => ['success', 'recharging', 'paid'].includes(o.status))
       .slice(0, 6)
-      .map((o) => ({
-        productId: o.productId,
-        productName: o.productName,
-        skuName: o.skuName,
-        maskAccount: mask(o.account),
-        createdAt: o.createdAt,
-        status: o.status,
-      }));
+      .map((o) =>
+        fillOrderI18n(
+          {
+            productId: o.productId,
+            productName: o.productName,
+            productNameEn: o.productNameEn || '',
+            skuName: o.skuName,
+            skuNameEn: o.skuNameEn || '',
+            maskAccount: mask(o.account),
+            createdAt: o.createdAt,
+            status: o.status,
+          },
+          data
+        )
+      );
     return ok(res, { list });
   }
 
@@ -674,8 +703,10 @@ async function handleApi(req, res, pathname, query) {
       no: 'DC' + (() => { const d = new Date(); return d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0'); })() + crypto.randomBytes(3).toString('hex').toUpperCase(),
       productId: product.id,
       productName: product.name,
+      productNameEn: product.nameEn || '',
       skuId: sku.id,
       skuName: sku.name,
+      skuNameEn: sku.nameEn || '',
       account,
       accountType: product.accountType || 'account',
       contact: String(body.contact || '').trim(),
@@ -1090,7 +1121,9 @@ async function handleApi(req, res, pathname, query) {
       target = data.products.find((x) => x.id === p.id);
       Object.assign(target, {
         name: p.name,
+        nameEn: p.nameEn || '',
         subtitle: p.subtitle || '',
+        subtitleEn: p.subtitleEn || '',
         catId: p.catId || target.catId,
         icon: p.icon || target.icon,
         hue: p.hue || target.hue,
@@ -1113,7 +1146,9 @@ async function handleApi(req, res, pathname, query) {
         sales: 0,
         skus: [],
         name: p.name,
+        nameEn: p.nameEn || '',
         subtitle: p.subtitle || '',
+        subtitleEn: p.subtitleEn || '',
         catId: p.catId || (data.categories[0] || {}).id,
         icon: p.icon || '🎁',
         hue: p.hue || '#6d5efc',
@@ -1159,6 +1194,7 @@ async function handleApi(req, res, pathname, query) {
     p.skus = list.map((s, i) => ({
       id: s.id || db.uid('S').toLowerCase(),
       name: s.name || '未命名套餐',
+      nameEn: s.nameEn || '',
       faceValue: Number(s.faceValue) || 0,
       price: Number(s.price) || 0,
       cost: Number(s.cost) || 0,

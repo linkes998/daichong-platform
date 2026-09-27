@@ -251,6 +251,69 @@ const OLD_PW = process.env.ADMIN_PW || 'admin888';
     }
   }
 
+  /* ================================================================
+     需求 5：商品 / 套餐中英双语标题
+     ================================================================ */
+  head('需求 5 · 商品 / 套餐中英双语标题');
+
+  const prodRes = await get('/api/admin/products', TOKEN);
+  const tgt = (prodRes.list || []).find((p) => (p.skus || []).length >= 2);
+
+  if (!tgt) {
+    fail('没有可用于测试的商品（需至少 2 个套餐）');
+  } else {
+    const EN_NAME = 'QA EN Product Title';
+    const EN_SUB = 'QA EN Subtitle';
+    const EN_SKU = 'QA-EN-SKU-';
+
+    const sv = await post('/api/admin/products', {
+      product: Object.assign({}, tgt, { nameEn: EN_NAME, subtitleEn: EN_SUB }),
+    }, TOKEN);
+    sv.ok && sv.product.nameEn === EN_NAME ? pass(`商品英文标题已保存：${sv.product.nameEn}`) : fail('商品英文标题保存失败');
+    sv.ok && sv.product.subtitleEn === EN_SUB ? pass('商品英文副标题已保存') : fail('商品英文副标题保存失败');
+    sv.ok && sv.product.name === tgt.name ? pass('中文标题未被覆盖：' + sv.product.name) : fail('中文标题被改动');
+
+    const skuSv = await post(`/api/admin/products/${tgt.id}/skus`, {
+      skus: tgt.skus.map((s, i) => Object.assign({}, s, { nameEn: EN_SKU + (i + 1) })),
+    }, TOKEN);
+    skuSv.ok && skuSv.product.skus[0].nameEn === EN_SKU + '1'
+      ? pass('套餐英文名已保存：' + skuSv.product.skus[0].nameEn)
+      : fail('套餐英文名保存失败');
+    skuSv.ok && skuSv.product.skus[0].name === tgt.skus[0].name ? pass('套餐中文名未被覆盖') : fail('套餐中文名被改动');
+
+    const st = await get('/api/store');
+    const sp = (st.products || []).find((p) => p.id === tgt.id);
+    sp && sp.nameEn === EN_NAME && sp.subtitleEn === EN_SUB
+      ? pass('前台接口下发商品英文标题与副标题')
+      : fail('前台未下发 nameEn / subtitleEn');
+    sp && sp.skus[0].nameEn === EN_SKU + '1' ? pass('前台接口下发套餐英文名') : fail('前台未下发套餐 nameEn');
+    sp && sp.name === tgt.name ? pass('前台中文标题保持不变') : fail('前台中文标题异常');
+
+    const sku = sp.skus.find((s) => (s.stock || 0) > 0) || sp.skus[0];
+    const accNo = { phone: '13800138000', email: 'qa@example.com', uid: '100086', username: '@qa', account: 'qa', gameid: 'x', none: '' }[sp.accountType || 'account'];
+    const od = await post('/api/orders', {
+      skuId: sku.id, account: accNo, accountConfirm: accNo, payMethod: (st.payMethods[0] || {}).code, quantity: 1,
+    });
+    od.ok && od.order.productNameEn === EN_NAME && od.order.skuNameEn === sku.nameEn
+      ? pass('下单时把双语标题一并写入订单快照')
+      : fail('订单快照缺少英文标题：' + JSON.stringify({ p: od.order && od.order.productNameEn, s: od.order && od.order.skuNameEn }));
+    od.ok && od.order.productName === sp.name ? pass('订单快照保留中文标题') : fail('订单快照中文标题异常');
+
+    if (od.ok) {
+      const dt = await get('/api/orders/' + od.order.no);
+      dt.order.productNameEn === EN_NAME ? pass('订单详情接口返回英文标题') : fail('订单详情未返回英文标题');
+    }
+
+    // 还原该商品的英文名配置
+    await post('/api/admin/products', {
+      product: Object.assign({}, tgt, { nameEn: tgt.nameEn || '', subtitleEn: tgt.subtitleEn || '' }),
+    }, TOKEN);
+    await post(`/api/admin/products/${tgt.id}/skus`, { skus: tgt.skus }, TOKEN);
+    const rb = await get('/api/store');
+    const rbp = (rb.products || []).find((p) => p.id === tgt.id);
+    rbp && !rbp.nameEn && !rbp.skus[0].nameEn ? pass('已还原商品的英文名配置') : fail('英文名还原失败');
+  }
+
   /* ============ 收尾：恢复快照 ============ */
   head('收尾 · 恢复测试前配置');
   const restoreStore = await get('/api/admin/settings', TOKEN);

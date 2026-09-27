@@ -74,7 +74,7 @@ async function doPay() {
 function infoRows() {
   const o = ORDER;
   return `<div class="info-rows">
-      <div class="r"><span class="k">${escapeHtml(t('cashier.product'))}</span><span class="v">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('cashier.product'))}</span><span class="v">${escapeHtml(pick(o.productName, o.productNameEn))} · ${escapeHtml(pick(o.skuName, o.skuNameEn))}</span></div>
       ${o.account
         ? `<div class="r"><span class="k">${escapeHtml(t('cashier.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>`
         : `<div class="r"><span class="k">${escapeHtml(t('cashier.delivery'))}</span><span class="v">${escapeHtml(t('cashier.auto'))}</span></div>`}
@@ -279,7 +279,7 @@ function renderStatus() {
       ${o.status === 'recharging' ? `<div style="margin-top:12px"><span class="spin"></span> <span style="font-size:12.5px;color:var(--text-3);margin-left:6px">${escapeHtml(t('result.rechargingNote'))}</span></div>` : ''}
     </div>
     <div class="info-rows">
-      <div class="r"><span class="k">${escapeHtml(t('result.product'))}</span><span class="v">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('result.product'))}</span><span class="v">${escapeHtml(pick(o.productName, o.productNameEn))} · ${escapeHtml(pick(o.skuName, o.skuNameEn))}</span></div>
       ${o.account ? `<div class="r"><span class="k">${escapeHtml(t('result.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>` : ''}
       <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">${price(o.amount)}${o.payForeignAmount && (o.payCurrency || 'USD') !== currentMoney().code ? ' · ' + escapeHtml(o.payForeignAmount) + ' ' + escapeHtml(o.payCurrency || '') : ''}</span></div>
       ${o.payTxId ? `<div class="r"><span class="k">TxID</span><span class="v mono" style="word-break:break-all">${escapeHtml(o.payTxId)}</span></div>` : ''}

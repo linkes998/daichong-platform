@@ -415,11 +415,13 @@ async function renderProducts() {
   const rows = res.list.map((p) => {
     const cat = res.categories.find((c) => c.id === p.catId) || {};
     const skus = (p.skus || []).sort((a, b) => a.sort - b.sort);
+    const enCount = skus.filter((s) => s.nameEn).length;
     return `<tr>
       <td>
         <div class="row-flex">
           <span style="width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;background:${hexA(p.hue, 0.16)}">${p.icon}</span>
           <div><div style="font-weight:600">${escapeHtml(p.name)}</div>
+          <div class="muted" style="font-size:11.5px">${p.nameEn ? escapeHtml(p.nameEn) : '<span style="color:#d98b2b">⚠ 缺英文名</span>'}</div>
           <div class="muted" style="font-size:11.5px">${escapeHtml(p.subtitle || '')}</div></div>
         </div>
       </td>
@@ -428,7 +430,9 @@ async function renderProducts() {
         <div>${escapeHtml(p.accountLabel || '')}</div>
         <div class="muted">${p.needConfirm ? '需二次确认' : '免二次确认'} · ${escapeHtml(accTypeText(p.accountType))}</div>
       </td>
-      <td>${skus.length} 个<div class="muted" style="font-size:11.5px">¥${money(p.minPrice)} 起</div></td>
+      <td>${skus.length} 个<div class="muted" style="font-size:11.5px">¥${money(p.minPrice)} 起</div>${
+        enCount < skus.length ? `<div style="font-size:11.5px;color:#d98b2b">${enCount}/${skus.length} 个已设英文名</div>` : ''
+      }</td>
       <td>${p.sales || 0}</td>
       <td>${p.status === 'active' ? '<span class="chip chip-ok">上架中</span>' : '<span class="chip">已下架</span>'}</td>
       <td style="text-align:right;white-space:nowrap">
@@ -456,11 +460,16 @@ function editProduct(id) {
   const cats = CACHE.categories;
   const accTypes = ACC_TYPES;
   const body = `<div class="form-grid">
-    <div class="form-sec full">基本信息</div>
-    <div class="field full"><label>商品名称 <span class="req">*</span></label>
-      <input class="input" id="pName" value="${p ? escapeHtml(p.name) : ''}" placeholder="例如：爱奇艺黄金VIP会员"></div>
-    <div class="field full"><label>副标题</label>
-      <input class="input" id="pSub" value="${p ? escapeHtml(p.subtitle || '') : ''}" placeholder="例如：支持手机/电脑/平板，不含电视端"></div>
+    <div class="form-sec full">基本信息 · 中英双语标题</div>
+    <div class="field"><label>商品名称 · 中文 <span class="req">*</span></label>
+      <input class="input" id="pName" value="${p && p.name ? escapeHtml(p.name) : ''}" placeholder="例如：爱奇艺黄金VIP会员"></div>
+    <div class="field"><label>商品名称 · 英文</label>
+      <input class="input" id="pNameEn" value="${p && p.nameEn ? escapeHtml(p.nameEn) : ''}" placeholder="e.g. iQIYI Gold VIP"></div>
+    <div class="field"><label>副标题 · 中文</label>
+      <input class="input" id="pSub" value="${p && p.subtitle ? escapeHtml(p.subtitle) : ''}" placeholder="例如：支持手机/电脑/平板，不含电视端"></div>
+    <div class="field"><label>副标题 · 英文</label>
+      <input class="input" id="pSubEn" value="${p && p.subtitleEn ? escapeHtml(p.subtitleEn) : ''}" placeholder="e.g. Mobile / PC / Tablet, TV not included"></div>
+    <div class="field full"><div class="hint">英文界面优先显示这里填写的「英文」内容；留空则自动回退到「站点文案词条」里维护的翻译，仍无则显示中文原文。</div></div>
     <div class="field"><label>所属分类</label>
       <select class="select" id="pCat">${cats.map((c) => `<option value="${c.id}" ${p && p.catId === c.id ? 'selected' : ''}>${c.icon} ${escapeHtml(c.name)}</option>`).join('')}</select></div>
     <div class="field"><label>图标 Emoji</label>
@@ -511,7 +520,8 @@ async function saveProduct(id) {
   if (!v('pName')) return toast('商品名称必填', 'err');
   const payload = {
     id: id || undefined,
-    name: v('pName'), subtitle: v('pSub'), catId: v('pCat'), icon: v('pIcon'), hue: v('pHue'),
+    name: v('pName'), nameEn: v('pNameEn'), subtitle: v('pSub'), subtitleEn: v('pSubEn'),
+    catId: v('pCat'), icon: v('pIcon'), hue: v('pHue'),
     badge: v('pBadge'), tags: v('pTags') ? v('pTags').split(/[，,]/).map((s) => s.trim()).filter(Boolean) : [],
     sort: Number(v('pSort')) || 0, status: v('pStatus'), deliveryMode: v('pDelivery'),
     accountType: v('pAccType'), accountLabel: v('pAccLabel'), accountPlaceholder: v('pAccPh'), accountHint: v('pAccHint'),
@@ -538,7 +548,10 @@ function editSkus(id) {
   if (!p) return;
   const sups = CACHE.suppliers.filter((s) => s.status === 'active');
   const rowHtml = (s) => `<tr data-row>
-    <td><input class="input" data-f="name" value="${s ? escapeHtml(s.name) : ''}" placeholder="月卡"></td>
+    <td>
+      <input class="input" data-f="name" value="${s ? escapeHtml(s.name) : ''}" placeholder="中文，如：月卡">
+      <input class="input" data-f="nameEn" value="${s && s.nameEn ? escapeHtml(s.nameEn) : ''}" placeholder="English, e.g. Monthly" style="margin-top:4px">
+    </td>
     <td><input class="input" data-f="faceValue" type="number" step="0.01" value="${s ? s.faceValue : ''}" style="width:76px"></td>
     <td><input class="input" data-f="price" type="number" step="0.01" value="${s ? s.price : ''}" style="width:76px"></td>
     <td><input class="input" data-f="cost" type="number" step="0.01" value="${s ? s.cost : ''}" style="width:76px"></td>
@@ -549,14 +562,15 @@ function editSkus(id) {
   </tr>`;
 
   const body = `<div class="muted" style="font-size:12.5px;margin-bottom:14px">
-      为每个套餐绑定「商品来源通道」与上游 SKU 编码，派单时会带上这些参数调用通道接口。加价率可参考：售价 ÷ 成本。
+      为每个套餐绑定「商品来源通道」与上游 SKU 编码，派单时会带上这些参数调用通道接口。加价率可参考：售价 ÷ 成本。<br>
+      套餐名支持中英双语：英文界面优先显示「英文」名称，留空则回退到内容词条翻译，仍无则显示中文原文。
     </div>
     <div class="table-wrap"><table class="sku-editor">
-      <thead><tr><th>套餐名</th><th>面值</th><th>售价</th><th>成本</th><th>库存</th><th>商品来源</th><th>上游SKU编码</th><th></th></tr></thead>
+      <thead><tr><th>套餐名（中文 / 英文）</th><th>面值</th><th>售价</th><th>成本</th><th>库存</th><th>商品来源</th><th>上游SKU编码</th><th></th></tr></thead>
       <tbody id="skuRows">${(p.skus || []).map(rowHtml).join('')}</tbody>
     </table></div>
     <button class="btn btn-sm" style="margin-top:10px" onclick="addSkuRow()">＋ 添加套餐</button>
-    <div class="hint" style="margin-top:12px">提示：留空的价格会按 0 处理；库存低于 100 会在概览页预警。</div>`;
+    <div class="hint" style="margin-top:12px">提示：留空的价格会按 0 处理；库存低于 100 会在概览页预警；套餐名的英文可留空，不影响中文界面。</div>`;
 
   const foot = `<button class="btn" onclick="closeModal()">取消</button>
     <button class="btn btn-primary" style="margin-left:auto" onclick="saveSkus('${id}')">保存套餐</button>`;
@@ -567,7 +581,10 @@ function addSkuRow() {
   const sups = CACHE.suppliers.filter((s) => s.status === 'active');
   const tr = document.createElement('tr');
   tr.setAttribute('data-row', '');
-  tr.innerHTML = `<td><input class="input" data-f="name" placeholder="月卡"></td>
+  tr.innerHTML = `<td>
+      <input class="input" data-f="name" placeholder="中文，如：月卡">
+      <input class="input" data-f="nameEn" placeholder="English, e.g. Monthly" style="margin-top:4px">
+    </td>
     <td><input class="input" data-f="faceValue" type="number" step="0.01" style="width:76px"></td>
     <td><input class="input" data-f="price" type="number" step="0.01" style="width:76px"></td>
     <td><input class="input" data-f="cost" type="number" step="0.01" style="width:76px"></td>
@@ -585,6 +602,7 @@ async function saveSkus(id) {
     return {
       id: (CACHE.products.find((p) => p.id === id).skus[i] || {}).id,
       name: g('name') || '未命名套餐',
+      nameEn: g('nameEn'),
       faceValue: Number(g('faceValue')) || 0,
       price: Number(g('price')) || 0,
       cost: Number(g('cost')) || 0,

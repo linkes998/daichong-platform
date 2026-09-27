@@ -39,6 +39,8 @@ const SHOTS = [
   { name: '08-商品来源API', url: '/admin.html#suppliers', login: true, actions: [{ wait: 1500 }] },
   { name: '09-系统设置', url: '/admin.html#settings', login: true, actions: [{ wait: 1300 }] },
   { name: '17-支付配置（含USDT通道）', url: '/admin.html#pay', login: true, actions: [{ wait: 1500 }] },
+  { name: '20-商品编辑（中英双语标题）', url: '/admin.html#products', login: true, actions: [{ wait: 1500 }, { click: 'tbody tr:first-child [onclick^="editProduct"]' }, { wait: 800 }] },
+  { name: '21-套餐管理（中英双语名称）', url: '/admin.html#products', login: true, actions: [{ wait: 1500 }, { click: 'tbody tr:first-child [onclick^="editSkus"]' }, { wait: 800 }] },
 ];
 
 const get = (u) => new Promise((res, rej) => http.get(u, (r) => { let d = ''; r.on('data', (c) => (d += c)); r.on('end', () => res(d)); }).on('error', rej));
@@ -169,6 +171,21 @@ class CDP {
 
     await cdp.send('Page.navigate', { url: BASE + shot.url });
     await new Promise((r) => setTimeout(r, 1200));
+
+    // 非登录态用例：若 profile 里残留了失效的后台 token（例如上一轮 test-features 改过密码，
+    // 触发了「改密后注销其他会话」），页面会带着旧 token 请求并报 401。
+    // 这里只在确实存在残留时清掉并重载一次，避免误报，又不影响正常路径的性能。
+    if (!shot.login) {
+      const cleared = await cdp.send('Runtime.evaluate', {
+        expression: "(()=>{const had=!!localStorage.getItem('admin_token');localStorage.removeItem('admin_token');return had})()",
+        returnByValue: true,
+      });
+      if (cleared.result && cleared.result.value) {
+        cdp.clear();
+        await cdp.send('Page.reload');
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+    }
 
     for (const act of shot.actions) {
       if (act.wait) await new Promise((r) => setTimeout(r, act.wait));

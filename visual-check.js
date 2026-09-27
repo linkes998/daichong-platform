@@ -116,6 +116,33 @@ class CDP {
   await waitPort();
   console.log('\n\x1b[36m▶ 真实浏览器渲染检查\x1b[0m\n');
 
+  // 动态补充「带订单号的独立收银台」用例：
+  // pay.html 在传了 no 参数时才会走真实的订单加载分支，静态空状态覆盖不到，
+  // 这里现下一笔待支付订单，专门覆盖该分支。
+  try {
+    const store = await (await fetch(BASE + '/api/store')).json();
+    let pick = null;
+    for (const p of store.products) for (const k of p.skus || []) if ((k.stock || 0) > 0) pick = { p, k };
+    if (pick) {
+      const acc = { phone: '13800138000', email: 'b@e.com', uid: '100086', username: '@buyer2026', account: 'buyer2026', gameid: 'x', none: '' }[pick.p.accountType || 'account'];
+      const created = await (await fetch(BASE + '/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ skuId: pick.k.id, account: acc, accountConfirm: acc, payMethod: (store.payMethods[0] || {}).code, quantity: 1 }),
+      })).json();
+      if (created && created.ok) {
+        const no = created.order.no;
+        SHOTS.push(
+          { name: '18-收银台-带订单号(英文)', url: '/pay.html?no=' + no, actions: [{ wait: 1800 }] },
+          { name: '19-收银台-带订单号(中文)', url: '/pay.html?no=' + no + '&lang=zh', actions: [{ wait: 1800 }] }
+        );
+        console.log('\x1b[90m（已为收银台用例准备订单 ' + no + '）\x1b[0m');
+      }
+    }
+  } catch (e) {
+    console.log('\x1b[33m（收银台动态用例准备失败，跳过：' + e.message + '）\x1b[0m');
+  }
+
   let issues = 0;
   for (const shot of SHOTS) {
     const tab = await newTab('about:blank');

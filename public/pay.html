@@ -35,12 +35,15 @@
 /* ============================================================
    独立收银台：支持 USDT / 国际信用卡 / PayPal / 国内扫码通道
    ============================================================ */
-let ORDER = null, PAYINFO = {}, SANDBOX = true, timer = null;
+let ORDER = null, ORDER_NO = '', PAYINFO = {}, SANDBOX = true, timer = null;
 
 async function loadOrder() {
-  const res = await api('/api/orders/' + ORDER.no);
+  // 注意：首次加载时 ORDER 还是 null，必须用 URL 上的订单号，不能读 ORDER.no
+  if (!ORDER_NO) return false;
+  const res = await api('/api/orders/' + encodeURIComponent(ORDER_NO));
   if (!res.ok) return false;
   ORDER = res.order;
+  ORDER_NO = ORDER.no;
   if (res.payInfo) PAYINFO = res.payInfo;
   if (typeof res.sandbox === 'boolean') SANDBOX = res.sandbox;
   return true;
@@ -122,7 +125,7 @@ function renderCrypto() {
       </div>
       ${address && !tooSmall ? qr : ''}
       <div class="amt"><small>${escapeHtml(amount)}</small> USDT</div>
-      ${cfg.rate ? `<div class="muted" style="font-size:12px;text-align:center">¥${money(o.amount)} · ${escapeHtml(t('usdt.rateUnit', money(cfg.rate)))}</div>` : ''}
+      ${cfg.rate ? `<div class="muted" style="font-size:12px;text-align:center">${price(o.amount)} · ${escapeHtml(t('usdt.rateUnit', price(cfg.rate)))}</div>` : ''}
       ${orderNoBlock()}
       <div class="countdown">⏳ ${escapeHtml(t('cashier.expire'))} <b id="cd">--:--</b></div>
       <div style="max-width:480px;margin:24px auto 0;text-align:left">
@@ -189,8 +192,8 @@ function renderRedirect() {
         <span class="chip chip-brand">${escapeHtml(label)}</span>
         <span class="chip chip-warn">${escapeHtml(t('pay.redirect'))}</span>
       </div>
-      <div class="amt"><small>¥</small>${money(o.amount)}</div>
-      ${o.payForeignAmount ? `<div class="muted" style="font-size:13px;text-align:center">${escapeHtml(t('pay.foreignAmount', o.payCurrency || 'USD'))} <b style="color:var(--text)">${escapeHtml(o.payForeignAmount)} ${escapeHtml(o.payCurrency || '')}</b></div>` : ''}
+      <div class="amt"><small>${priceParts(o.amount).sym}</small>${priceParts(o.amount).num}</div>
+      ${o.payForeignAmount && (o.payCurrency || 'USD') !== currentMoney().code ? `<div class="muted" style="font-size:13px;text-align:center">${escapeHtml(t('pay.foreignAmount', o.payCurrency || 'USD'))} <b style="color:var(--text)">${escapeHtml(o.payForeignAmount)} ${escapeHtml(o.payCurrency || '')}</b></div>` : ''}
       ${orderNoBlock()}
       <div class="countdown">⏳ ${escapeHtml(t('cashier.expire'))} <b id="cd">--:--</b></div>
       <div style="max-width:460px;margin:24px auto 0;text-align:left">
@@ -223,7 +226,7 @@ function renderMock() {
         <span class="chip chip-warn">${escapeHtml(statusLabel(o.status))}</span>
       </div>
       <div class="qr">${qrSvg(o.payTradeNo || o.no, 200)}</div>
-      <div class="amt"><small>¥</small>${money(o.amount)}</div>
+      <div class="amt"><small>${priceParts(o.amount).sym}</small>${priceParts(o.amount).num}</div>
       ${orderNoBlock()}
       <div class="countdown">⏳ ${escapeHtml(t('cashier.expire'))} <b id="cd">--:--</b></div>
       <div style="max-width:440px;margin:24px auto 0;text-align:left">
@@ -278,7 +281,7 @@ function renderStatus() {
     <div class="info-rows">
       <div class="r"><span class="k">${escapeHtml(t('result.product'))}</span><span class="v">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</span></div>
       ${o.account ? `<div class="r"><span class="k">${escapeHtml(t('result.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>` : ''}
-      <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">¥${money(o.amount)}${o.payForeignAmount ? ' · ' + escapeHtml(o.payForeignAmount) + ' ' + escapeHtml(o.payCurrency || '') : ''}</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">${price(o.amount)}${o.payForeignAmount && (o.payCurrency || 'USD') !== currentMoney().code ? ' · ' + escapeHtml(o.payForeignAmount) + ' ' + escapeHtml(o.payCurrency || '') : ''}</span></div>
       ${o.payTxId ? `<div class="r"><span class="k">TxID</span><span class="v mono" style="word-break:break-all">${escapeHtml(o.payTxId)}</span></div>` : ''}
       <div class="r"><span class="k">${escapeHtml(t('result.supplier'))}</span><span class="v">${escapeHtml(pick(o.supplierName) || '—')}${o.supplierOrderNo ? ' · ' + escapeHtml(o.supplierOrderNo) : ''}</span></div>
     </div>
@@ -308,6 +311,7 @@ async function boot() {
   if (sub) sub.textContent = t('brand.sub2');
 
   const no = qs('no');
+  ORDER_NO = no || '';
   const host = document.getElementById('host');
   if (!no) {
     host.innerHTML = `<div class="empty"><div class="big">🧾</div>${escapeHtml(t('pay.noOrder'))}<div style="margin-top:14px"><a class="btn btn-sm" href="/query.html">${escapeHtml(t('pay.toQuery'))}</a></div></div>`;

@@ -16,6 +16,55 @@ let LANG = 'en';
 const LANG_KEY = 'store_lang';
 
 /* ------------------------------------------------------------------ */
+/* 显示币种                                                            */
+/*   商品原价统一以人民币（CNY）存储与结算：                            */
+/*     · 中文界面 → 直接展示原价（¥）                                   */
+/*     · 英文界面 → 按站点配置汇率换算为美元（$）展示                    */
+/*   换算只影响展示，不改变订单金额与支付通道的结算币种。                 */
+/* ------------------------------------------------------------------ */
+
+const MONEY_DEFAULT = { base: 'CNY', baseSymbol: '¥', usdRate: 7.2, usdSymbol: '$' };
+let MONEY = Object.assign({}, MONEY_DEFAULT);
+
+/** 写入服务端下发的显示币种配置（非法值自动回退默认） */
+function setMoneyConfig(m) {
+  if (!m || typeof m !== 'object') return;
+  const rate = Number(m.usdRate);
+  MONEY = {
+    base: m.base || 'CNY',
+    baseSymbol: m.baseSymbol || '¥',
+    usdRate: rate > 0 ? rate : MONEY_DEFAULT.usdRate,
+    usdSymbol: m.usdSymbol || '$',
+  };
+}
+
+/** 当前界面的币种信息 */
+function currentMoney() {
+  if (LANG === 'zh') return { code: MONEY.base, symbol: MONEY.baseSymbol, rate: 1 };
+  return { code: 'USD', symbol: MONEY.usdSymbol, rate: MONEY.usdRate };
+}
+
+/** 人民币原价 → 当前界面币种的数值 */
+function priceNumber(cny) {
+  const n = Number(cny) || 0;
+  if (LANG === 'zh') return n;
+  return n / (MONEY.usdRate || MONEY_DEFAULT.usdRate);
+}
+
+/** 格式化金额（含符号）：中文 ¥19.9 / 英文 $2.76 */
+function price(cny) {
+  const n = priceNumber(cny);
+  return currentMoney().symbol + (LANG === 'zh' ? money(n) : n.toFixed(2));
+}
+
+/** 拆分符号与数值，便于用不同字号排版 */
+function priceParts(cny) {
+  const n = priceNumber(cny);
+  if (LANG === 'zh') return { sym: MONEY.baseSymbol, num: money(n) };
+  return { sym: MONEY.usdSymbol, num: n.toFixed(2) };
+}
+
+/* ------------------------------------------------------------------ */
 /* 界面词条                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -160,7 +209,7 @@ const UI = {
     'usdt.address': 'Receiving Address',
     'usdt.amount': 'Amount Due',
     'usdt.rate': 'Reference Rate',
-    'usdt.rateUnit': '1 USDT = ¥{0}',
+    'usdt.rateUnit': '1 USDT = {0}',
     'usdt.memo': 'Memo',
     'usdt.memoHint': 'Please include the order number {0} in the transfer memo',
     'usdt.tips': 'Notes',
@@ -395,7 +444,7 @@ const UI = {
     'usdt.address': '收款地址',
     'usdt.amount': '应付金额',
     'usdt.rate': '参考汇率',
-    'usdt.rateUnit': '1 USDT = ¥{0}',
+    'usdt.rateUnit': '1 USDT = {0}',
     'usdt.memo': '转账备注',
     'usdt.memoHint': '请在转账备注中填写订单号 {0}',
     'usdt.tips': '温馨提示',
@@ -831,17 +880,20 @@ async function initI18n() {
 
   applyI18n();
 
-  // 按访问者 IP 校正（不阻塞首屏渲染）
-  if (!I18N.manual) {
-    try {
-      const res = await api('/api/locale');
-      if (res && res.ok && (res.lang === 'zh' || res.lang === 'en')) {
+  // 拉取「语言识别结果 + 显示币种配置」（不阻塞首屏渲染）
+  //  · 语言：仅在用户未手动选择时用于校正
+  //  · 币种：无论语言是否手动选择都需要（英文界面要拿站点汇率换算 USD）
+  try {
+    const res = await api('/api/locale');
+    if (res && res.ok) {
+      if (res.money) setMoneyConfig(res.money);
+      if (!I18N.manual && (res.lang === 'zh' || res.lang === 'en')) {
         I18N.source = res.source || 'ip';
         if (res.lang !== LANG) setLang(res.lang);
       }
-    } catch (e) {
-      /* 识别失败保持浏览器语言 */
     }
+  } catch (e) {
+    /* 识别失败：保持浏览器语言与默认汇率 */
   }
   return LANG;
 }
@@ -861,6 +913,11 @@ function pick(zh, en) {
 }
 
 /* 暴露到全局，供内联 onclick 使用 */
+window.price = price;
+window.priceParts = priceParts;
+window.priceNumber = priceNumber;
+window.currentMoney = currentMoney;
+window.setMoneyConfig = setMoneyConfig;
 window.t = t;
 window.pick = pick;
 window.statusLabel = statusLabel;

@@ -163,7 +163,7 @@ function renderProducts() {
           <span class="tag">${escapeHtml(t('products.skuCount', (p.skus || []).length))}</span></div>
         <div class="prod-foot">
           <div>
-            <div class="price"><small>¥</small>${money(p.minPrice)}${(p.skus || []).length > 1 ? '<small>' + t('products.from') + '</small>' : ''}</div>
+            <div class="price"><small>${priceParts(p.minPrice).sym}</small>${priceParts(p.minPrice).num}${(p.skus || []).length > 1 ? '<small>' + t('products.from') + '</small>' : ''}</div>
             <div class="prod-sales">${escapeHtml(t('products.sold', p.sales || 0))}${soldOut ? ' · ' + t('products.noStock') : ' · ' + escapeHtml(t('products.stockLeft', stock))}</div>
           </div>
           ${
@@ -295,8 +295,8 @@ function formView() {
           .map(
             (s) => `<div class="sku-item ${s.id === state.skuId ? 'on' : ''}" data-sku="${s.id}">
               <div class="radio"></div>
-              <div class="info"><b>${escapeHtml(t(s.name))}</b><div>${s.faceValue > 0 && s.faceValue !== s.price ? '¥' + money(s.faceValue) + ' · ' : ''}${s.stock > 0 ? escapeHtml(t('products.stockLeft', s.stock)) : escapeHtml(t('products.soldOut'))}</div></div>
-              <div class="p"><b>¥${money(s.price)}</b>${s.faceValue > 0 && s.faceValue !== s.price ? `<div>¥${money(s.faceValue)}</div>` : ''}</div>
+              <div class="info"><b>${escapeHtml(t(s.name))}</b><div>${s.faceValue > 0 && s.faceValue !== s.price ? price(s.faceValue) + ' · ' : ''}${s.stock > 0 ? escapeHtml(t('products.stockLeft', s.stock)) : escapeHtml(t('products.soldOut'))}</div></div>
+              <div class="p"><b>${price(s.price)}</b>${s.faceValue > 0 && s.faceValue !== s.price ? `<div>${price(s.faceValue)}</div>` : ''}</div>
             </div>`
           )
           .join('')}
@@ -352,9 +352,9 @@ function formView() {
       </div>
 
       <div class="summary">
-        <div class="row"><span>${escapeHtml(t('modal.amount'))}</span><span>¥${money(amount)}</span></div>
-        <div class="row" id="feeRow" style="display:none"><span>${escapeHtml(t('modal.fee'))}</span><span>¥0</span></div>
-        <div class="row total"><span>${escapeHtml(t('modal.total'))}</span><b>¥${money(amount)}</b></div>
+        <div class="row"><span>${escapeHtml(t('modal.amount'))}</span><span>${price(amount)}</span></div>
+        <div class="row" id="feeRow" style="display:none"><span>${escapeHtml(t('modal.fee'))}</span><span>${price(0)}</span></div>
+        <div class="row total"><span>${escapeHtml(t('modal.total'))}</span><b>${price(amount)}</b></div>
       </div>
       <div class="trust">
         <span>${escapeHtml(t('modal.trust1'))}</span><span>${escapeHtml(t('modal.trust2'))}</span><span>${escapeHtml(t('modal.trust3'))}</span>
@@ -369,7 +369,7 @@ function formView() {
       </div>
       <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
         <div style="text-align:right"><div style="font-size:11.5px;color:var(--text-3)">${escapeHtml(t('modal.total'))}</div>
-        <div style="font-size:22px;font-weight:750;color:#ffb4a8;letter-spacing:-.6px">¥${money(amount)}</div></div>
+        <div style="font-size:22px;font-weight:750;color:#ffb4a8;letter-spacing:-.6px">${price(amount)}</div></div>
         <button class="btn btn-primary btn-lg" id="submitOrder">${escapeHtml(t('modal.submit'))}</button>
       </div>
     </div>`;
@@ -531,7 +531,7 @@ function cryptoCashier(o, pay) {
       </div>
       ${canPay ? qr : ''}
       <div class="amt"><small>${escapeHtml(amount)}</small> USDT</div>
-      ${rate ? `<div class="muted" style="font-size:12px;text-align:center">¥${money(o.amount)} · ${escapeHtml(t('usdt.rateUnit', money(rate)))}</div>` : ''}
+      ${rate ? `<div class="muted" style="font-size:12px;text-align:center">${price(o.amount)} · ${escapeHtml(t('usdt.rateUnit', price(rate)))}</div>` : ''}
       ${orderNoRow(o)}
       <div class="countdown" id="cdBox">⏳ ${escapeHtml(t('cashier.expire'))} <b id="cdText">--:--</b></div>
 
@@ -619,12 +619,12 @@ function redirectCashier(o, pay) {
         <span class="chip chip-brand">${escapeHtml(kindLabel)}</span>
         <span class="chip">${escapeHtml(t('cashier.created'))}</span>
       </div>
-      <div class="amt"><small>¥</small>${money(o.amount)}</div>
+      <div class="amt"><small>${priceParts(o.amount).sym}</small>${priceParts(o.amount).num}</div>
       ${
-        o.payForeignAmount
+        o.payForeignAmount && (o.payCurrency || 'USD') !== currentMoney().code
           ? `<div class="muted" style="font-size:13px;text-align:center">${escapeHtml(t('pay.foreignAmount', o.payCurrency || 'USD'))}
              <b style="color:var(--text)">${escapeHtml(o.payForeignAmount)} ${escapeHtml(o.payCurrency || '')}</b>
-             ${o.payRate ? ' · ' + escapeHtml(t('pay.rate')) + ' ' + money(o.payRate) : ''}</div>`
+             ${o.payRate ? ' · ' + escapeHtml(t('pay.rate')) + ' ' + price(o.payRate) : ''}</div>`
           : ''
       }
       ${orderNoRow(o)}
@@ -665,7 +665,7 @@ function mockCashier(o, pay) {
         <span class="chip">${escapeHtml(t('cashier.created'))}</span>
       </div>
       <div class="qr">${qrSvg(o.payTradeNo || o.no, 190)}</div>
-      <div class="amt"><small>¥</small>${money(o.amount)}</div>
+      <div class="amt"><small>${priceParts(o.amount).sym}</small>${priceParts(o.amount).num}</div>
       ${orderNoRow(o)}
       <div class="countdown" id="cdBox">⏳ ${escapeHtml(t('cashier.expire'))} <b id="cdText">--:--</b></div>
       <div style="max-width:420px;margin:22px auto 0;text-align:left">
@@ -806,7 +806,7 @@ function resultInner() {
         <button class="btn btn-xs btn-ghost" onclick="copyText('${o.no}','${escapeHtml(t('toast.copied'))}')">⧉</button></span></div>
       <div class="r"><span class="k">${escapeHtml(t('result.product'))}</span><span class="v">${escapeHtml(pick(o.productName))} · ${escapeHtml(t(o.skuName))}</span></div>
       ${o.account ? `<div class="r"><span class="k">${escapeHtml(t('result.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>` : `<div class="r"><span class="k">${escapeHtml(t('cashier.delivery'))}</span><span class="v">${escapeHtml(t('cashier.auto'))}</span></div>`}
-      <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">¥${money(o.amount)}（${escapeHtml(pick(o.payMethodName))}）</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">${price(o.amount)}（${escapeHtml(pick(o.payMethodName))}）</span></div>
       ${o.payTxId ? `<div class="r"><span class="k">TxID</span><span class="v mono" style="word-break:break-all">${escapeHtml(o.payTxId)}</span></div>` : ''}
       <div class="r"><span class="k">${escapeHtml(t('result.supplier'))}</span><span class="v">${escapeHtml(pick(o.supplierName) || '—')}${o.supplierOrderNo ? ' · ' + escapeHtml(o.supplierOrderNo) : ''}</span></div>
       <div class="r"><span class="k">${escapeHtml(t('result.createdAt'))}</span><span class="v">${fmtTime(o.createdAt)}</span></div>

@@ -110,6 +110,22 @@ function revokeOtherTokens(keepToken, username) {
   return n;
 }
 
+/**
+ * 前台显示币种配置
+ * 商品原价统一以人民币（CNY）存储；中文界面按原价展示，
+ * 英文界面按站点汇率换算为美元（USD）展示，仅影响展示、不改变实际结算金额。
+ */
+function displayMoney() {
+  const s = db.get().settings || {};
+  const rate = Number(s.usdRate);
+  return {
+    base: 'CNY',
+    baseSymbol: s.cnySymbol || '¥',
+    usdRate: rate > 0 ? rate : 7.2,
+    usdSymbol: s.usdSymbol || '$',
+  };
+}
+
 function json(res, code, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(code, {
@@ -331,6 +347,8 @@ function syncPayMethods() {
   });
 
   data.settings = data.settings || {};
+  // 英文界面显示币种汇率（仅影响前台展示，不改变订单金额）
+  if (!(Number(data.settings.usdRate) > 0)) data.settings.usdRate = 7.2;
   data.settings.i18n = Object.assign(
     { enabled: true, defaultLang: 'en', autoByIp: true, ipApiUrl: 'http://ip-api.com/json/', timeoutMs: 1500, cacheHours: 6 },
     data.settings.i18n || {}
@@ -566,6 +584,8 @@ async function handleApi(req, res, pathname, query) {
         defaultLang: i18nCfg.defaultLang === 'zh' ? 'zh' : 'en',
         i18nEnabled: i18nCfg.enabled !== false,
         autoLangByIp: i18nCfg.autoByIp !== false,
+        // 显示币种：中文 → CNY 原价，英文 → 按 usdRate 换算为 USD
+        money: displayMoney(),
       },
       categories: data.categories.filter((c) => c.status !== 'disabled').sort((a, b) => a.sort - b.sort),
       payMethods: data.payMethods
@@ -578,10 +598,14 @@ async function handleApi(req, res, pathname, query) {
     });
   }
 
-  /** 语言识别：按访问者 IP 归属地 / Accept-Language 判定 */
+  /**
+   * 语言识别：按访问者 IP 归属地 / Accept-Language 判定
+   * 同时下发显示币种配置 —— 语言与货币是同一件事的两面，
+   * 且查询页 / 收银台并不请求 /api/store，需要从这里拿到汇率。
+   */
   if (pathname === '/api/locale' && method === 'GET') {
     const r = await i18n.detectLang(req, query);
-    return ok(res, r);
+    return ok(res, Object.assign(r, { money: displayMoney() }));
   }
 
   /** 首页实时成交动态（脱敏） */

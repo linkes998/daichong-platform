@@ -48,7 +48,7 @@ function card(o) {
           ? `<div class="r"><span class="k">${escapeHtml(t('result.account'))}</span><span class="v"><b>${escapeHtml(o.account)}</b></span></div>`
           : `<div class="r"><span class="k">${escapeHtml(t('cashier.delivery'))}</span><span class="v">${escapeHtml(t('cashier.auto'))}</span></div>`
       }
-      <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">¥${money(o.amount)} · ${escapeHtml(pick(o.payMethodName))}</span></div>
+      <div class="r"><span class="k">${escapeHtml(t('result.paid'))}</span><span class="v">${price(o.amount)} · ${escapeHtml(pick(o.payMethodName))}</span></div>
       ${
         o.payForeignAmount
           ? `<div class="r"><span class="k">${escapeHtml(t('pay.foreignAmount', o.payCurrency || 'USD'))}</span><span class="v">${escapeHtml(o.payForeignAmount)} ${escapeHtml(o.payCurrency || '')}</span></div>`

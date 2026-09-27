@@ -1311,6 +1311,9 @@ async function renderSettings() {
             <input class="input" id="i18nTimeout" type="number" value="${Number(i18nCfg.timeoutMs) || 2500}"></div>
           <div class="field"><label>结果缓存（小时）</label>
             <input class="input" id="i18nCache" type="number" value="${Number(i18nCfg.cacheHours) || 6}"></div>
+          <div class="field"><label>英文界面汇率（1 USD = ? CNY）</label>
+            <input class="input" id="i18nUsdRate" type="number" step="0.0001" value="${Number(s.usdRate) > 0 ? Number(s.usdRate) : 7.2}">
+            <div class="hint">英文界面下所有金额按此汇率换算为 USD 展示（中文界面始终显示人民币原价）。<b>仅影响展示</b>，不改变订单金额与支付通道结算。</div></div>
           <div class="field full"><label class="switch ${i18nCfg.enabled !== false ? 'on' : ''}" id="i18nEnabled" onclick="this.classList.toggle('on')">
             <span class="track"></span><span>启用前台多语言（关闭后所有访客固定使用默认语言）</span></label></div>
           <div class="field full"><label class="switch ${i18nCfg.autoByIp !== false ? 'on' : ''}" id="i18nByIp" onclick="this.classList.toggle('on')">
@@ -1350,6 +1353,8 @@ async function saveSettings() {
       minAmountAlert: Number(v('stMin')) || 1000,
       autoRecharge: on('stAuto'),
       sandboxMode: on('stSandbox'),
+      // 英文界面显示币种：1 USD = ? CNY（仅影响前台展示）
+      usdRate: Number(v('i18nUsdRate')) > 0 ? Number(v('i18nUsdRate')) : 7.2,
       i18n: {
         defaultLang: v('i18nDefault') || 'en',
         enabled: on('i18nEnabled'),
